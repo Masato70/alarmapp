@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,25 +24,35 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
+
   final String title;
+
   @override
   State<MyHomePage> createState() => AlarmPage();
 }
 
 class AlarmPage extends State<MyHomePage> {
   List<TimeOfDay> _alarms = [];
-
+  List<bool> _switchValues = [];
   late SharedPreferences _prefs;
 
   @override
   void initState() {
     super.initState();
+    _initPrefs();
     _loadAlarms();
+  }
+
+  Future<void> _initPrefs() async {
+    _prefs = await SharedPreferences.getInstance();
   }
 
   Future<void> _loadAlarms() async {
     _prefs = await SharedPreferences.getInstance();
     final alarmsJson = _prefs.getStringList('alarms') ?? [];
+    final switchValuesJson = _prefs.getStringList('switchValues') ?? [];
+    final switchValues =  switchValuesJson.map((json) => json == "true").toList();
+
     setState(() {
       _alarms = alarmsJson.map((time) {
         final parts = time.split(':');
@@ -50,6 +61,10 @@ class AlarmPage extends State<MyHomePage> {
           minute: int.parse(parts[1]),
         );
       }).toList();
+      _switchValues = switchValues.toList();
+      while (_alarms.length > _switchValues.length) {
+        _switchValues.add(true);
+      }
     });
   }
 
@@ -57,7 +72,11 @@ class AlarmPage extends State<MyHomePage> {
     final alarmsJson = _alarms.map((time) {
       return '${time.hour}:${time.minute}';
     }).toList();
+    final switchValuesJson = _switchValues.map((value)  {
+      return value.toString();
+    }).toList();
     await _prefs.setStringList('alarms', alarmsJson);
+    await _prefs.setStringList("switchValues", switchValuesJson);
   }
 
   _timePicker(BuildContext context) async {
@@ -66,6 +85,7 @@ class AlarmPage extends State<MyHomePage> {
     if (timePicked != null) {
       setState(() {
         _alarms.add(timePicked);
+        _switchValues.add(true);
       });
       await _saveAlarms();
     }
@@ -83,9 +103,19 @@ class AlarmPage extends State<MyHomePage> {
         itemCount: _alarms.length,
         itemBuilder: (BuildContext context, int index) {
           final time = _alarms[index];
+          final switchValue = _switchValues[index];
           return Card(
             child: ListTile(
               title: Text(_formatTime(time)),
+              leading: Switch(
+                value: switchValue,
+                onChanged: (bool value) {
+                  setState(() {
+                    _switchValues[index] = value;
+                  });
+                  _saveAlarms();
+                },
+              ),
             ),
           );
         },
