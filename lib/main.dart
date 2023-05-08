@@ -40,18 +40,20 @@ class AlarmPage extends State<MyHomePage> {
   void initState() {
     super.initState();
     _initPrefs();
-    _loadAlarms();
   }
 
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
+    _loadAlarms();
   }
 
   Future<void> _loadAlarms() async {
+    print("_loadAlarms called");
     _prefs = await SharedPreferences.getInstance();
     final alarmsJson = _prefs.getStringList('alarms') ?? [];
     final switchValuesJson = _prefs.getStringList('switchValues') ?? [];
-    final switchValues =  switchValuesJson.map((json) => json == "true").toList();
+    final switchValues =
+        switchValuesJson.map((json) => json == "true").toList();
 
     setState(() {
       _alarms = alarmsJson.map((time) {
@@ -61,6 +63,14 @@ class AlarmPage extends State<MyHomePage> {
           minute: int.parse(parts[1]),
         );
       }).toList();
+
+      _alarms.sort((a, b) {
+        if (a.hour == b.hour) {
+          return a.minute.compareTo(b.minute);
+        }
+        return a.hour.compareTo(b.hour);
+      });
+
       _switchValues = switchValues.toList();
       while (_alarms.length > _switchValues.length) {
         _switchValues.add(true);
@@ -72,7 +82,7 @@ class AlarmPage extends State<MyHomePage> {
     final alarmsJson = _alarms.map((time) {
       return '${time.hour}:${time.minute}';
     }).toList();
-    final switchValuesJson = _switchValues.map((value)  {
+    final switchValuesJson = _switchValues.map((value) {
       return value.toString();
     }).toList();
     await _prefs.setStringList('alarms', alarmsJson);
@@ -83,21 +93,23 @@ class AlarmPage extends State<MyHomePage> {
     final TimeOfDay? timePicked = await showTimePicker(
         context: context, initialTime: TimeOfDay(hour: 6, minute: 0));
     if (timePicked != null) {
+      print("Alarm added: ${_formatTime(timePicked)}");
       setState(() {
         _alarms.add(timePicked);
         _switchValues.add(true);
       });
       await _saveAlarms();
+      await _loadAlarms();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black12,
+      backgroundColor: Colors.black38,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: Text("アラーム"),
+        title: Text("目覚まし"),
       ),
       body: ListView.builder(
         itemCount: _alarms.length,
@@ -105,18 +117,33 @@ class AlarmPage extends State<MyHomePage> {
           final time = _alarms[index];
           final switchValue = _switchValues[index];
           return Card(
-            child: ListTile(
-              title: Text(_formatTime(time)),
-              leading: Switch(
-                value: switchValue,
-                onChanged: (bool value) {
-                  setState(() {
-                    _switchValues[index] = value;
-                  });
-                  _saveAlarms();
-                },
-              ),
-            ),
+            color: Colors.grey.shade900,
+            child: Padding(
+                padding: EdgeInsets.all(36),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ListTile(
+                        title: Text(
+                          _formatTime(time),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: switchValue ? 32 : 30,
+                              color: switchValue ? Colors.white : Colors.grey),
+                        ),
+                        trailing: Switch(
+                          value: switchValue,
+                          onChanged: (bool value) {
+                            setState(() {
+                              _switchValues[index] = value;
+                            });
+                            _saveAlarms();
+                          },
+                        ),
+                      ),
+                    )
+                  ],
+                )),
           );
         },
       ),
