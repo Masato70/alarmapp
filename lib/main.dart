@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:weekday_selector/weekday_selector.dart';
 
 void main() {
   runApp(const MyApp());
@@ -147,12 +149,18 @@ class AlarmPage extends State<MyHomePage> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.large(
-        onPressed: () {
-          _timePicker(context);
-        },
-        backgroundColor: Colors.cyan,
-        child: Icon(Icons.add),
+      bottomNavigationBar: Container(
+        height: 100,
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: FloatingActionButton.large(
+            onPressed: () {
+              _timePicker(context);
+            },
+            backgroundColor: Colors.cyan,
+            child: Icon(Icons.add),
+          ),
+        ),
       ),
     );
   }
