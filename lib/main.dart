@@ -26,7 +26,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
   final String title;
 
   @override
@@ -37,34 +36,36 @@ class AlarmPage extends State<MyHomePage> {
   List<TimeOfDay> _alarms = [];
   List<TimeOfDay> _alarmsLinks = [];
   List<bool> _switchValues = [];
-  List<bool> _weekdaysValues = List.filled(7, true);
+  List<bool> _switchValuesLinks = [];
+  List<bool> _weekdaysValues = List.filled(7, false);
+
   late SharedPreferences _prefs;
 
   @override
   void initState() {
     super.initState();
     _initPrefs();
+    print("_initPrefs called");
   }
 
   Future<void> _initPrefs() async {
-    _prefs = await SharedPreferences.getInstance();
     _loadAlarms();
   }
 
+  //アプリ開いたらまずココ
   Future<void> _loadAlarms() async {
-    print("_loadAlarms called");
+    print("_loadAlarms Start");
     _prefs = await SharedPreferences.getInstance();
     final alarmsJson = _prefs.getStringList('alarms') ?? [];
-    final switchValuesJson = _prefs.getStringList('switchValues') ?? [];
-    final switchValues =
-        switchValuesJson.map((json) => json == "true").toList();
-
     final alarmsLinkJson = _prefs.getStringList("alarmsLinks") ?? [];
+    final switchValuesJson = _prefs.getStringList('switchValues') ?? [];
+    final switchValues = switchValuesJson.map((json) => json == "true").toList();
+    final switchValuesLinksJson = _prefs.getStringList('switchValuesLinks') ?? [];
+    final switchValuesLinks = switchValuesLinksJson.map((json) => json == "true").toList();
 
-    final weekdaysValuesJson =
-        _prefs.getStringList("weekdaysValues") ?? List.filled(7, "true");
-    final weekdaysValues =
-        weekdaysValuesJson.map((json) => json == "true").toList();
+    final weekdaysValuesJson = _prefs.getStringList("weekdaysValues") ?? List.filled(7, "false");
+    final weekdaysValues = weekdaysValuesJson.map((json) => json == "true").toList();
+
 
     print("alarms Link ${alarmsLinkJson}");
     print("alarm ${alarmsJson}");
@@ -93,20 +94,31 @@ class AlarmPage extends State<MyHomePage> {
         );
       }).toList();
 
+      _alarmsLinks.sort((a, b) {
+        if(a.hour == b.hour) {
+          return a.minute.compareTo(b.minute);
+        }
+        return a.hour.compareTo(b.hour);
+      });
+
       _switchValues = switchValues.toList();
       while (_alarms.length > _switchValues.length) {
         _switchValues.add(true);
       }
 
-      _weekdaysValues = weekdaysValues.toList();
-      while (_weekdaysValues.length < 7) {
-        _weekdaysValues.add(true);
+      _switchValuesLinks = switchValuesLinks.toList();
+      while (_alarmsLinks.length >  _switchValuesLinks.length) {
+        _switchValuesLinks.add(true);
       }
+
+      _weekdaysValues = weekdaysValues.toList();
     });
+    print("_loadAlarms Finish");
   }
 
   Future<void> _saveAlarms() async {
-    print(_weekdaysValues.toString());
+    print("_saveAlarms Start");
+    print(_weekdaysValues);
     final alarmsJson = _alarms.map((time) {
       return '${time.hour}:${time.minute}';
     }).toList();
@@ -116,6 +128,9 @@ class AlarmPage extends State<MyHomePage> {
     final alarmsLinkJson = _alarmsLinks.map((timeLinks) {
       return "${timeLinks.hour}:${timeLinks.minute}";
     }).toList();
+    final switchValuesLinksJson = _switchValuesLinks.map((value) {
+      return value.toString();
+    }).toList();
     final weekdaysVluesJson = _weekdaysValues.map((value) {
       return value.toString();
     }).toList();
@@ -123,7 +138,9 @@ class AlarmPage extends State<MyHomePage> {
     await _prefs.setStringList('alarms', alarmsJson);
     await _prefs.setStringList("alarmsLinks", alarmsLinkJson);
     await _prefs.setStringList("switchValues", switchValuesJson);
-    await _prefs.setStringList("weekdaysVlues", weekdaysVluesJson);
+    await _prefs.setStringList("switchValuesLinks", switchValuesLinksJson);
+    await _prefs.setStringList("weekdaysValues", weekdaysVluesJson);
+    print("_saveAlarms Finish");
   }
 
   _timePicker(BuildContext context) async {
@@ -134,7 +151,10 @@ class AlarmPage extends State<MyHomePage> {
       setState(() {
         _alarms.add(timePicked);
         _switchValues.add(true);
+        // _weekdaysValues.add(false);
+        print("セット完了");
       });
+      print("次の処理");
       await _saveAlarms();
       await _loadAlarms();
     }
@@ -144,9 +164,10 @@ class AlarmPage extends State<MyHomePage> {
     final TimeOfDay? timePicked = await showTimePicker(
         context: context, initialTime: TimeOfDay(hour: 6, minute: 0));
     if (timePicked != null) {
-      print("Alarm link added: ${_formatTimeLinks(timePicked)}");
+      print("Alarm link added: ${_formatTime(timePicked)}");
       setState(() {
         _alarmsLinks.add(timePicked);
+        _switchValuesLinks.add(true);
       });
       await _saveAlarms();
       await _loadAlarms();
@@ -155,7 +176,6 @@ class AlarmPage extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final values = List.filled(7, true);
     return Scaffold(
       backgroundColor: Colors.black38,
       appBar: AppBar(
@@ -166,12 +186,12 @@ class AlarmPage extends State<MyHomePage> {
         itemCount: _alarms.length,
         itemBuilder: (BuildContext context, int index) {
           final time = _alarms[index];
-          // final times = _alarmsLinks[index];
           final switchValue = _switchValues[index];
+          final switchValueLinks = _switchValuesLinks.length > index ? _switchValuesLinks[index] : false;
           return Card(
             color: Colors.grey.shade900,
             child: Padding(
-              padding: EdgeInsets.all(40),
+              padding: EdgeInsets.all(35),
               child: Column(
                 children: [
                   Row(
@@ -184,20 +204,19 @@ class AlarmPage extends State<MyHomePage> {
                               _formatTime(time),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: switchValue ? 50 : 48,
+                                fontSize: switchValue ? 50 : 49,
                                 color: switchValue ? Colors.white : Colors.grey,
                               ),
                             ),
                             WeekdaySelector(
                               onChanged: (int day) {
                                 setState(() {
-                                  values[day] = !values[day];
+                                  final index = day % 7;
+                                  _weekdaysValues[index] = !_weekdaysValues[index];
                                 });
-                                _weekdaysValues[index] =
-                                    values.every((value) => value == true);
                                 _saveAlarms();
                               },
-                              values: values,
+                              values: _weekdaysValues,
                             ),
                             TextButton.icon(
                               onPressed: () {
@@ -222,15 +241,34 @@ class AlarmPage extends State<MyHomePage> {
                   ),
                   ListView.builder(
                     shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
                     itemCount: _alarmsLinks.length,
-                    itemBuilder: (context, i) {
-                      final linksTime = _alarmsLinks[i];
-                      return ListTile(
-                        title: Text(
-                          _formatTime(linksTime),
-                          style: TextStyle(
-                              color: Colors.white, fontSize: 30), // テキストの色を白に設定
-                        ),
+                    itemBuilder: (BuildContext context, int linkIndex) {
+                      final linksTime = _alarmsLinks[linkIndex];
+                      final linkSwitchValue = _switchValuesLinks[linkIndex];
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: ListTile(
+                              title: Text(
+                                _formatTime(linksTime),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 30,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Switch(
+                            value: linkSwitchValue,
+                            onChanged: (bool value) {
+                              setState(() {
+                                _switchValuesLinks[linkIndex] = value;
+                              });
+                              _saveAlarms();
+                            },
+                          ),
+                        ],
                       );
                     },
                   ),
@@ -257,13 +295,6 @@ class AlarmPage extends State<MyHomePage> {
   }
 
   String _formatTime(TimeOfDay time) {
-    final hour = time.hourOfPeriod.toString().padLeft(2, "0");
-    final minute = time.minute.toString().padLeft(2, "0");
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return "$hour:$minute $period";
-  }
-
-  String _formatTimeLinks(TimeOfDay time) {
     final hour = time.hourOfPeriod.toString().padLeft(2, "0");
     final minute = time.minute.toString().padLeft(2, "0");
     final period = time.period == DayPeriod.am ? 'AM' : 'PM';

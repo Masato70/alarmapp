@@ -28,7 +28,8 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  weekday_selector: ^1.0.0-nullsafety.0
+  weekday_selector: ^1.1.0
+#  weekday_selector: ^1.0.0-nullsafety.0
   flutter:
     sdk: flutter
 
@@ -37,7 +38,7 @@ dependencies:
   cupertino_icons: ^1.0.2
 
 dev_dependencies:
-  shared_preferences: ^2.0.20
+  shared_preferences: ^2.1.1
 
   flutter_test:
     sdk: flutter
