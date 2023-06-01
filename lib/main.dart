@@ -26,19 +26,50 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
+
   final String title;
 
   @override
   State<MyHomePage> createState() => AlarmPage();
 }
 
-class AlarmPage extends State<MyHomePage> {
-  List<TimeOfDay> _alarms = [];
-  List<TimeOfDay> _alarmsLinks = [];
-  List<bool> _switchValues = [];
-  List<bool> _switchValuesLinks = [];
-  List<bool> _weekdaysValues = List.filled(7, false);
+class AlarmCard {
+  int id;
+  TimeOfDay alarmTime;
+  bool switchValue;
+  List<TimeOfDay>? alarmTimeLinks;
+  List<bool>? switchValueLinks;
+  List<bool>? weekdaysValues;
 
+  AlarmCard({
+    required this.id,
+    required this.alarmTime,
+    required this.switchValue,
+    this.alarmTimeLinks,
+    this.switchValueLinks,
+    this.weekdaysValues,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id' : id,
+      'alarmTime': {
+        'hour': alarmTime.hour,
+        'minute': alarmTime.minute,
+      },
+      'switchValue': switchValue,
+      'alarmTimeLinks': alarmTimeLinks?.map((time) => {
+        'hour': time.hour,
+        'minute': time.minute,
+      }).toList(),
+      'switchValueLinks': switchValueLinks,
+      'weekdaysValues': weekdaysValues,
+    };
+  }
+}
+
+class AlarmPage extends State<MyHomePage> {
+  List<AlarmCard> _alarms = [];
   late SharedPreferences _prefs;
 
   @override
@@ -56,21 +87,46 @@ class AlarmPage extends State<MyHomePage> {
   Future<void> _loadAlarms() async {
     print("_loadAlarms Start");
     _prefs = await SharedPreferences.getInstance();
-    final alarmsJson = _prefs.getStringList('alarms') ?? [];
-    final alarmsLinkJson = _prefs.getStringList("alarmsLinks") ?? [];
-    final switchValuesJson = _prefs.getStringList('switchValues') ?? [];
-    final switchValues = switchValuesJson.map((json) => json == "true").toList();
-    final switchValuesLinksJson = _prefs.getStringList('switchValuesLinks') ?? [];
-    final switchValuesLinks = switchValuesLinksJson.map((json) => json == "true").toList();
+    final alarmCardsJson = _prefs.getStringList('alarmCards') ?? [];
 
-    final weekdaysValuesJson = _prefs.getStringList("weekdaysValues") ?? List.filled(7, "false");
-    final weekdaysValues = weekdaysValuesJson.map((json) => json == "true").toList();
+    final alarmCards = alarmCardsJson.map((json) {
+      final data = jsonDecode(json);
 
+      final alarmTime = TimeOfDay(
+        hour: data['alarmTime']['hour'],
+        minute: data['alarmTime']['minute'],
+      );
 
-    print("alarms Link ${alarmsLinkJson}");
-    print("alarm ${alarmsJson}");
+      final alarmTimeLinks = (data['alarmTimeLinks'] as List).map((linkData) {
+        return TimeOfDay(
+          hour: linkData['hour'],
+          minute: linkData['minute'],
+        );
+      }).toList();
 
-    setState(() {
+      final switchValue = data['switchValue'];
+
+      final switchValueLinks = (data['switchValueLinks'] as List).map((value) {
+        return value;
+      }).toList();
+
+      final weekdaysValues = (data['weekdaysValues'] as List).map((value) {
+        return value;
+      }).toList();
+
+      return AlarmCard(
+        id: alarmCardsJson.indexOf(json),
+        alarmTime: alarmTime,
+        switchValue: switchValue,
+        alarmTimeLinks: alarmTimeLinks,
+        switchValueLinks: switchValueLinks,
+        weekdaysValues: weekdaysValues,
+      );
+    }).toList();
+
+      setState(() {
+        _alarms = alarmCards.toList();
+
       _alarms = alarmsJson.map((time) {
         final parts = time.split(':');
         return TimeOfDay(
@@ -95,7 +151,7 @@ class AlarmPage extends State<MyHomePage> {
       }).toList();
 
       _alarmsLinks.sort((a, b) {
-        if(a.hour == b.hour) {
+        if (a.hour == b.hour) {
           return a.minute.compareTo(b.minute);
         }
         return a.hour.compareTo(b.hour);
@@ -107,7 +163,7 @@ class AlarmPage extends State<MyHomePage> {
       }
 
       _switchValuesLinks = switchValuesLinks.toList();
-      while (_alarmsLinks.length >  _switchValuesLinks.length) {
+      while (_alarmsLinks.length > _switchValuesLinks.length) {
         _switchValuesLinks.add(true);
       }
 
@@ -117,44 +173,61 @@ class AlarmPage extends State<MyHomePage> {
   }
 
   Future<void> _saveAlarms() async {
-    print("_saveAlarms Start");
-    print(_weekdaysValues);
-    final alarmsJson = _alarms.map((time) {
-      return '${time.hour}:${time.minute}';
-    }).toList();
-    final switchValuesJson = _switchValues.map((value) {
-      return value.toString();
-    }).toList();
-    final alarmsLinkJson = _alarmsLinks.map((timeLinks) {
-      return "${timeLinks.hour}:${timeLinks.minute}";
-    }).toList();
-    final switchValuesLinksJson = _switchValuesLinks.map((value) {
-      return value.toString();
-    }).toList();
-    final weekdaysVluesJson = _weekdaysValues.map((value) {
-      return value.toString();
+    _prefs = await SharedPreferences.getInstance();
+
+    final alarmCardsJson = _alarms.map((alarm) {
+      return jsonEncode(alarm.toJson());
     }).toList();
 
+    final alarmsJson = _alarms.map((alarm) {
+      return '${alarm.alarmTime.hour}:${alarm.alarmTime.minute}';
+    }).toList();
+
+    final switchValuesJson = _alarms.map((alarm) {
+      return alarm.switchValue.toString();
+    }).toList();
+
+    final alarmsLinkJson = _alarms.map((alarm) {
+      return alarm.alarmTimeLinks?.map((time) {
+        return '${time.hour}:${time.minute}';
+      }).toList() ?? [];
+    }).toList();
+
+    final switchValuesLinksJson = _alarms.map((alarm) {
+      return alarm.switchValueLinks?.toString() ?? "";
+    }).toList();
+
+    final weekdaysValuesJson = _alarms.map((alarm) {
+      return alarm.weekdaysValues?.toString() ?? "";
+    }).toList() ;
+
+    await _prefs.setStringList('alarmCards', alarmCardsJson);
     await _prefs.setStringList('alarms', alarmsJson);
-    await _prefs.setStringList("alarmsLinks", alarmsLinkJson);
-    await _prefs.setStringList("switchValues", switchValuesJson);
-    await _prefs.setStringList("switchValuesLinks", switchValuesLinksJson);
-    await _prefs.setStringList("weekdaysValues", weekdaysVluesJson);
-    print("_saveAlarms Finish");
+    await _prefs.setStringList('switchValues', switchValuesJson);
+    await _prefs.setStringList('alarmsLinks', alarmsLinkJson.cast<String>());
+    await _prefs.setStringList('switchValuesLinks', switchValuesLinksJson);
+    await _prefs.setStringList('weekdaysValues', weekdaysValuesJson);
   }
 
+
   _timePicker(BuildContext context) async {
+    _prefs = await SharedPreferences.getInstance();
+
     final TimeOfDay? timePicked = await showTimePicker(
-        context: context, initialTime: TimeOfDay(hour: 6, minute: 0));
+        context: context, initialTime: TimeOfDay(hour: 6, minute: 0)
+    );
+
     if (timePicked != null) {
       print("Alarm added: ${_formatTime(timePicked)}");
+      final String formatedTime = _formatTime(timePicked);
+      //SharedPreferenceにセット & _alarmsリストに追加
+      _prefs.setString("alarmTime", formatedTime);
+      AlarmCard newAlarmCard = AlarmCard(id: _alarms.length, alarmTime: timePicked, switchValue: true,);
+      _alarms.add(newAlarmCard);
+
       setState(() {
-        _alarms.add(timePicked);
-        _switchValues.add(true);
-        // _weekdaysValues.add(false);
         print("セット完了");
       });
-      print("次の処理");
       await _saveAlarms();
       await _loadAlarms();
     }
@@ -187,7 +260,9 @@ class AlarmPage extends State<MyHomePage> {
         itemBuilder: (BuildContext context, int index) {
           final time = _alarms[index];
           final switchValue = _switchValues[index];
-          final switchValueLinks = _switchValuesLinks.length > index ? _switchValuesLinks[index] : false;
+          final switchValueLinks = _switchValuesLinks.length > index
+              ? _switchValuesLinks[index]
+              : false;
           return Card(
             color: Colors.grey.shade900,
             child: Padding(
@@ -212,7 +287,8 @@ class AlarmPage extends State<MyHomePage> {
                               onChanged: (int day) {
                                 setState(() {
                                   final index = day % 7;
-                                  _weekdaysValues[index] = !_weekdaysValues[index];
+                                  _weekdaysValues[index] =
+                                      !_weekdaysValues[index];
                                 });
                                 _saveAlarms();
                               },
