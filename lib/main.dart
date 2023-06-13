@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:alarm_clock/preferences_service.dart';
+import 'package:alarm_clock/time_picker_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:weekday_selector/weekday_selector.dart';
+import 'package:alarm_clock/alarm_card.dart'; // alarm_card.dartファイルのインポート
 
 void main() {
   runApp(const MyApp());
@@ -33,61 +35,21 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => AlarmPage();
 }
 
-
 class AlarmPage extends State<MyHomePage> {
-  List<AlarmCard> _alarms = [];
-  late SharedPreferences _prefs;
+  List<AlarmCard> alarms = [];
 
   @override
   void initState() {
     super.initState();
-     _loadAlarms();
-  }
-
-
-
-
-
-
-  _timePickerLinks(BuildContext context, int cardIndex) async {
-    _prefs = await SharedPreferences.getInstance();
-
-    final TimeOfDay? timePicked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay(hour: 6, minute: 0),
-    );
-
-    if (timePicked != null) {
-      print("Alarm added: ${_formatTime(timePicked)}");
-      final String formattedTime = _formatTime(timePicked);
-
-      // カードの情報を取得
-      final AlarmCard selectedCard = _alarms[cardIndex];
-
-      // alarmTimeLinksに新しい時間を追加
-      final List<TimeOfDay> alarmTimeLinks = selectedCard.alarmTimeLinks ?? [];
-      alarmTimeLinks.add(timePicked);
-
-      // switchValueLinksに新しいスイッチの値を追加
-      final List<bool> switchValueLinks = selectedCard.switchValueLinks ?? [];
-      switchValueLinks.add(true);
-
-      // カードの情報を更新
-      selectedCard.alarmTimeLinks = alarmTimeLinks;
-      selectedCard.switchValueLinks = switchValueLinks;
-
-      // SharedPreferencesに保存
-      await _saveAlarms();
-      await _loadAlarms();
-
-      setState(() {
-        print("セット完了");
-      });
-    }
+    PreferencesService preferencesService = PreferencesService();
+    preferencesService.loadAlarms(alarms);
   }
 
   @override
   Widget build(BuildContext context) {
+    PreferencesService preferencesService = PreferencesService();
+    TimePickerService timePickerService = TimePickerService();
+    print("main: $alarms");
     return Scaffold(
       backgroundColor: Colors.black38,
       appBar: AppBar(
@@ -95,11 +57,11 @@ class AlarmPage extends State<MyHomePage> {
         title: Text("目覚まし"),
       ),
       body: ListView.builder(
-        itemCount: _alarms.length,
+        itemCount: alarms.length,
         itemBuilder: (BuildContext context, int index) {
-          final alarm = _alarms[index];
+          final alarm = alarms[index];
           final switchValue = alarm.switchValue;
-          final switchValueLinks = alarm.switchValueLinks ?? [];
+          final switchValueLinks = alarm.linkSwitchValue ?? [];
           final weekdaysValues = alarm.weekdaysValues ?? [];
 
           return Card(
@@ -134,7 +96,8 @@ class AlarmPage extends State<MyHomePage> {
                             // ),
                             TextButton.icon(
                               onPressed: () {
-                                _timePickerLinks(context, index);
+                                timePickerService.timePickerLinks(
+                                    context, index);
                               },
                               icon: Icon(Icons.add),
                               label: Text("時間を追加する"),
@@ -146,9 +109,9 @@ class AlarmPage extends State<MyHomePage> {
                         value: switchValue,
                         onChanged: (bool value) {
                           setState(() {
-                            _alarms[index].switchValue = value;
+                            alarms[index].switchValue = value;
                           });
-                          _saveAlarms();
+                          preferencesService.saveAlarms(alarms);
                         },
                       ),
                     ],
@@ -156,9 +119,9 @@ class AlarmPage extends State<MyHomePage> {
                   ListView.builder(
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
-                    itemCount: alarm.alarmTimeLinks?.length ?? 0,
+                    itemCount: alarm.linkAlarmTime?.length ?? 0,
                     itemBuilder: (BuildContext context, int linkIndex) {
-                      final linksTime = alarm.alarmTimeLinks![linkIndex];
+                      final linksTime = alarm.linkAlarmTime![linkIndex];
                       final linkSwitchValue = switchValueLinks[linkIndex];
                       return Row(
                         children: [
@@ -177,9 +140,10 @@ class AlarmPage extends State<MyHomePage> {
                             value: linkSwitchValue,
                             onChanged: (bool value) {
                               setState(() {
-                                _alarms[index].switchValueLinks![linkIndex] = value;
+                                alarms[index].linkSwitchValue![linkIndex] =
+                                    value;
                               });
-                              _saveAlarms();
+                              preferencesService;
                             },
                           ),
                         ],
@@ -198,7 +162,7 @@ class AlarmPage extends State<MyHomePage> {
           alignment: Alignment.bottomCenter,
           child: FloatingActionButton.large(
             onPressed: () {
-              _timePicker(context);
+              timePickerService.timePicker(context, alarms);
             },
             backgroundColor: Colors.cyan,
             child: Icon(Icons.add),
@@ -207,5 +171,11 @@ class AlarmPage extends State<MyHomePage> {
       ),
     );
   }
+}
 
+String _formatTime(TimeOfDay time) {
+  final hour = time.hourOfPeriod.toString().padLeft(2, "0");
+  final minute = time.minute.toString().padLeft(2, "0");
+  final period = time.period == DayPeriod.am ? 'AM' : 'PM';
+  return "$hour:$minute $period";
 }
