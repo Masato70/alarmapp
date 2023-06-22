@@ -9,7 +9,6 @@ class TimePickerService {
   List<AlarmCard> alarms = [];
 
   Future<void> timePicker(BuildContext context, List<AlarmCard> alarms) async {
-
     final TimeOfDay? timePicked = await showTimePicker(
         context: context, initialTime: TimeOfDay(hour: 6, minute: 0)
     );
@@ -17,20 +16,22 @@ class TimePickerService {
     if (timePicked != null) {
       //_alarmsリストに追加
       AlarmCard newAlarmCard = AlarmCard(
-        id: alarms.length,
+        id: alarms.length.toString(),
         alarmTime: timePicked,
         switchValue: true,
+        // weekdaysValues:
       );
+      print(newAlarmCard);
       alarms.add(newAlarmCard);
 
       print('timePicker time: $alarms');
       PreferencesService preferencesService = PreferencesService();
       await preferencesService.saveAlarms(alarms);
-      await preferencesService.loadAlarms(alarms);}
+      await preferencesService.loadAlarms(alarms);
+    }
   }
 
   Future<void> timePickerLinks(BuildContext context, int cardIndex) async {
-
     final TimeOfDay? timePicked = await showTimePicker(
       context: context, initialTime: TimeOfDay(hour: 6, minute: 0),
     );
@@ -47,6 +48,7 @@ class TimePickerService {
       selectedCard.linkAlarmTime = alarmTimeLinks;
       selectedCard.linkSwitchValue = switchValueLinks;
 
+      print('timePickerLinks time: $alarms');
       PreferencesService preferencesService = PreferencesService();
       await preferencesService.saveAlarms(alarms);
       await preferencesService.loadAlarms(alarms);

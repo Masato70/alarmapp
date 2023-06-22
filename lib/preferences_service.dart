@@ -3,20 +3,25 @@ import 'package:alarm_clock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'alarm_card.dart';
+import 'package:sqflite/sqflite.dart';
+
 
 class PreferencesService {
   late SharedPreferences prefs;
 
-  Future<void> initPrefs() async {
-    prefs = await SharedPreferences.getInstance();
-  }
-
-  Future<void> loadAlarms(List<AlarmCard> alarms) async {
+  Future<Stream<List<AlarmCard>>> loadAlarms(List<AlarmCard> alarms) async {
     prefs = await SharedPreferences.getInstance();
     print('loadAlarms alarmls: $alarms');
+    print("aa ${prefs.getStringList('alarmCards') ?? []}");
+    final alarmCardsJson = prefs.getStringList('alarmCards') ?? [];
 
-    final alarmList = alarms.map((alarm) {
-      final data = alarm.toJson();
+
+    final alarmCards = alarmCardsJson.map((json) {
+      // final alarmList = alarms.map((alarm) {
+      // final data = alarm.toJson();
+      final data = jsonDecode(json);
+
+      final alarmCardID = data['id'];
 
       final alarmTime = TimeOfDay(
         hour: data['alarmTime']['hour'],
@@ -41,30 +46,45 @@ class PreferencesService {
       // }).toList();
 
       return AlarmCard(
-        id: data['id'],
+        id: alarmCardID,
         alarmTime: alarmTime,
         switchValue: switchValue,
         linkAlarmTime: linkAlarmTime,
         linkSwitchValue: linkSwitchValue,
-        // weekdaysValues: weekdaysValues,
       );
     }).toList();
 
-    alarms = alarmList;
+    print("ii $alarmCards");
+    alarms.clear();
+    alarms.addAll(alarmCards);
     alarms.sort((a, b) {
       if (a.alarmTime.hour == b.alarmTime.hour) {
         return a.alarmTime.minute.compareTo(b.alarmTime.minute);
       }
       return a.alarmTime.hour.compareTo(b.alarmTime.hour);
     });
+
+    print('alarms check $alarms');
+    await prefs.getStringList('cardID');
+
+
     print("loadAlarms Finish");
+    return Stream.value(alarms);
+
   }
 
 
   Future<void> saveAlarms(List<AlarmCard> alarms) async {
     print('saveAlarms alarm: $alarms');
-    await initPrefs();
     prefs = await SharedPreferences.getInstance();
+
+    final alarmCardsJson = alarms.map((alarm) {
+      return jsonEncode(alarm.toJson());
+    }).toList();
+
+    final alarmCardID = alarms.map((alarm) {
+      return alarm.id;
+    }).toList();
 
     final alarmsJson = alarms.map((alarm) {
       return _formatTime(alarm.alarmTime);
@@ -88,12 +108,17 @@ class PreferencesService {
     //   return alarm.weekdaysValues ?? [];
     // }).toList();
 
+
+    await prefs.setStringList('alarmCards', alarmCardsJson);
+    await prefs.setStringList('cardID', alarmCardID);
     await prefs.setStringList('alarms', alarmsJson);
     await prefs.setStringList('switchValues', switchValuesJson);
     final flattenedAlarmsLinkJson = linkAlarmsTimeJson.expand((list) => list).toList();
     await prefs.setStringList('alarmsLinks', flattenedAlarmsLinkJson);
     await prefs.setStringList('switchValuesLinks', linkSwitchValueJson);
-    // await _prefs.setStringList('weekdaysValues', weekdaysValuesJson.cast());
+    // await prefs.setStringList('weekdaysValues', weekdaysValuesJson.cast());
+
+    print(alarmCardID);
     print("saveAlarms Finish");
   }
 

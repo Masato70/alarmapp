@@ -6,6 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:alarm_clock/alarm_card.dart'; // alarm_card.dartファイルのインポート
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+
+
+
 
 void main() {
   runApp(const MyApp());
@@ -25,6 +31,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -62,7 +69,7 @@ class AlarmPage extends State<MyHomePage> {
           final alarm = alarms[index];
           final switchValue = alarm.switchValue;
           final switchValueLinks = alarm.linkSwitchValue ?? [];
-          final weekdaysValues = alarm.weekdaysValues ?? [];
+          // final weekdaysValues = alarm.weekdaysValues ?? [];
 
           return Card(
             color: Colors.grey.shade900,

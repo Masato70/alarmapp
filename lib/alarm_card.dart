@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 class AlarmCard {
-  int id;
+
+  String id;
   TimeOfDay alarmTime;
   bool switchValue;
   List<TimeOfDay>? linkAlarmTime;
   List<bool>? linkSwitchValue;
-  List<bool>? weekdaysValues;
+  // List<bool>? weekdaysValues;
+
 
   AlarmCard({
     required this.id,
@@ -14,7 +16,7 @@ class AlarmCard {
     required this.switchValue,
     this.linkAlarmTime,
     this.linkSwitchValue,
-    this.weekdaysValues,
+    // this.weekdaysValues,
   });
 
   Map<String, dynamic> toJson() {
@@ -30,7 +32,7 @@ class AlarmCard {
         'minute': time.minute,
       }).toList(),
       'switchValueLinks': linkSwitchValue,
-      'weekdaysValues': weekdaysValues,
+      // 'weekdaysValues': weekdaysValues,
     };
   }
 
