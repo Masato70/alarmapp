@@ -9,7 +9,7 @@ import 'package:sqflite/sqflite.dart';
 class PreferencesService {
   late SharedPreferences prefs;
 
-  Future<Stream<List<AlarmCard>>> loadAlarms(List<AlarmCard> alarms) async {
+  Future<void> loadAlarms(List<AlarmCard> alarms) async {
     prefs = await SharedPreferences.getInstance();
     print('loadAlarms alarmls: $alarms');
     print("aa ${prefs.getStringList('alarmCards') ?? []}");
@@ -69,8 +69,6 @@ class PreferencesService {
 
 
     print("loadAlarms Finish");
-    return Stream.value(alarms);
-
   }
 
 
