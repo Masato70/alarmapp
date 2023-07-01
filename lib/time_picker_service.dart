@@ -4,56 +4,76 @@ import 'package:alarm_clock/preferences_service.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'alarm_card.dart';
+import 'package:uuid/uuid.dart';
 
 class TimePickerService {
-  List<AlarmCard> alarms = [];
 
-  Future<void> timePicker(BuildContext context, List<AlarmCard> alarms) async {
+  Future<void> parentTimePicker(BuildContext context, List<AlarmCard> alarms) async {
     final TimeOfDay? timePicked = await showTimePicker(
-        context: context, initialTime: TimeOfDay(hour: 6, minute: 0)
-    );
+        context: context, initialTime: TimeOfDay(hour: 6, minute: 0));
 
     if (timePicked != null) {
-      //_alarmsリストに追加
+      var uuid = Uuid();
+      var newId = uuid.v4();
+      while (alarms.any((userData) => userData.id == newId)) {
+        newId = uuid.v4();
+      }
+
       AlarmCard newAlarmCard = AlarmCard(
-        id: alarms.length.toString(),
+        id: newId,
+        isParent: true,
         alarmTime: timePicked,
         switchValue: true,
         // weekdaysValues:
       );
-      print(newAlarmCard);
-      alarms.add(newAlarmCard);
+      print("parentTimePicker newCard $newAlarmCard");
 
-      print('timePicker time: $alarms');
+      alarms.add(newAlarmCard);
+      print('parentTimePicker alarms: $alarms');
+
       PreferencesService preferencesService = PreferencesService();
       await preferencesService.saveAlarms(alarms);
       await preferencesService.loadAlarms(alarms);
+
+      // await preferencesService.loadAlarms(alarms);
     }
   }
 
-  Future<void> timePickerLinks(BuildContext context, int cardIndex) async {
+  Future<void> childTimePicker(BuildContext context, int cardIndex, List<AlarmCard> alarms) async {
     final TimeOfDay? timePicked = await showTimePicker(
-      context: context, initialTime: TimeOfDay(hour: 6, minute: 0),
+      context: context,
+      initialTime: TimeOfDay(hour: 6, minute: 0),
     );
 
     if (timePicked != null) {
 
-
       final AlarmCard selectedCard = alarms[cardIndex];
+      final parentId = selectedCard.id;
 
-      final List<TimeOfDay> alarmTimeLinks = selectedCard.linkAlarmTime ?? [];
-      alarmTimeLinks.add(timePicked);
+      var uuid = Uuid();
+      var childId = uuid.v4();
+      while (alarms.any((userData) => userData.id == childId)) {
+        childId = uuid.v4();
+      }
 
-      final List<bool> switchValueLinks = selectedCard.linkSwitchValue ?? [];
-      switchValueLinks.add(true);
 
-      selectedCard.linkAlarmTime = alarmTimeLinks;
-      selectedCard.linkSwitchValue = switchValueLinks;
+      AlarmCard newAlarmCard = AlarmCard(
+        id: parentId,
+        isParent: false,
+        childId: childId,
+        alarmTime: timePicked,
+        switchValue: true,
+        // weekdaysValues:
+      );
+      print("childTimePicker newCard $newAlarmCard");
 
-      print('timePickerLinks time: $alarms');
+      alarms.add(newAlarmCard);
+      print('childTimePicker alarms: $alarms');
+
+
       PreferencesService preferencesService = PreferencesService();
       await preferencesService.saveAlarms(alarms);
-      await preferencesService.loadAlarms(alarms);
+      // await preferencesService.loadAlarms(alarms);
     }
   }
 }

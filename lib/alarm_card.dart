@@ -1,44 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
+
 
 class AlarmCard {
 
   String id;
+  bool isParent;
+  String? childId;
   TimeOfDay alarmTime;
   bool switchValue;
-  List<TimeOfDay>? linkAlarmTime;
-  List<bool>? linkSwitchValue;
   // List<bool>? weekdaysValues;
-
 
   AlarmCard({
     required this.id,
+    required this.isParent,
+    this.childId,
     required this.alarmTime,
     required this.switchValue,
-    this.linkAlarmTime,
-    this.linkSwitchValue,
     // this.weekdaysValues,
   });
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'isParent': isParent,
+      'childId' : childId,
       'alarmTime': {
         'hour': alarmTime.hour,
         'minute': alarmTime.minute,
       },
       'switchValue': switchValue,
-      'alarmTimeLinks': linkAlarmTime?.map((time) => {
-        'hour': time.hour,
-        'minute': time.minute,
-      }).toList(),
-      'switchValueLinks': linkSwitchValue,
       // 'weekdaysValues': weekdaysValues,
     };
   }
 
   @override
   String toString() {
-    return 'AlarmCard(id: $id, alarmTime: $alarmTime, switchValue: $switchValue, alarmTimeLinks: $linkAlarmTime, switchValueLinks: $linkSwitchValue)';
+    return 'AlarmCard(id: $id, isParent: $isParent, childId: $childId, alarmTime: $alarmTime, switchValue: $switchValue)';
   }
 }
 
