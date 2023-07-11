@@ -2,13 +2,12 @@ import 'dart:convert';
 import 'package:alarm_clock/main.dart';
 import 'package:alarm_clock/preferences_service.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'alarm_card.dart';
 import 'package:uuid/uuid.dart';
 
 class TimePickerService {
 
-  Future<void> parentTimePicker(BuildContext context, List<AlarmCard> alarms) async {
+  Future<void> parentTimePicker(BuildContext context, List<AlarmCard> alarms, Function callback) async {
     final TimeOfDay? timePicked = await showTimePicker(
         context: context, initialTime: TimeOfDay(hour: 6, minute: 0));
 
@@ -33,13 +32,11 @@ class TimePickerService {
 
       PreferencesService preferencesService = PreferencesService();
       await preferencesService.saveAlarms(alarms);
-      await preferencesService.loadAlarms(alarms);
-
-      // await preferencesService.loadAlarms(alarms);
+      await preferencesService.loadAlarms(alarms,callback);
     }
   }
 
-  Future<void> childTimePicker(BuildContext context, int cardIndex, List<AlarmCard> alarms) async {
+  Future<void> childTimePicker(BuildContext context, int cardIndex, List<AlarmCard> alarms, Function callback) async {
     final TimeOfDay? timePicked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: 6, minute: 0),
@@ -51,16 +48,16 @@ class TimePickerService {
       final parentId = selectedCard.id;
 
       var uuid = Uuid();
-      var childId = uuid.v4();
-      while (alarms.any((userData) => userData.id == childId)) {
-        childId = uuid.v4();
+      var cardID = uuid.v4();
+      while (alarms.any((userData) => userData.id == cardID)) {
+        cardID = uuid.v4();
       }
 
 
       AlarmCard newAlarmCard = AlarmCard(
-        id: parentId,
+        id: cardID,
         isParent: false,
-        childId: childId,
+        childId: parentId,
         alarmTime: timePicked,
         switchValue: true,
         // weekdaysValues:
@@ -70,10 +67,9 @@ class TimePickerService {
       alarms.add(newAlarmCard);
       print('childTimePicker alarms: $alarms');
 
-
       PreferencesService preferencesService = PreferencesService();
       await preferencesService.saveAlarms(alarms);
-      // await preferencesService.loadAlarms(alarms);
+      await preferencesService.loadAlarms(alarms, callback);
     }
   }
 }

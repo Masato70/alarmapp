@@ -11,7 +11,7 @@ class AlarmCard {
   bool switchValue;
   // List<bool>? weekdaysValues;
 
-  AlarmCard({
+  AlarmCard ({
     required this.id,
     required this.isParent,
     this.childId,
@@ -39,9 +39,3 @@ class AlarmCard {
     return 'AlarmCard(id: $id, isParent: $isParent, childId: $childId, alarmTime: $alarmTime, switchValue: $switchValue)';
   }
 }
-
-
-
-
-
-
