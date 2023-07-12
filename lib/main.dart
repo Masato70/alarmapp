@@ -64,20 +64,13 @@ class AlarmPage extends State<MyHomePage> {
         title: Text("アラーム"),
       ),
       body: ListView.builder(
-        // itemCount: alarms.length,
+
         itemCount: alarms.where((alarm) => alarm.isParent).length,
         itemBuilder: (BuildContext context, int parentIndex) {
 
-          //alarmsにあって、isParentがtrueのみを取得
-          // final parentAlarms = alarms.where((alarm) => alarm.isParent).toList()[parentIndex];
           final parentAlarms = alarms.where((alarm) => alarm.isParent).toList().elementAt(parentIndex);
-
-          print(parentAlarms);
-          // final parentAlarm = parentAlarms[parentIndex];
           final switchValue = parentAlarms.switchValue;
-          //alarmsにあって、alarm.childIdとparentAlarm.idが同じアイテムだけを取得aitemudakewoshutoku
           final childAlarms = alarms.where((alarm) => alarm.childId == parentAlarms.id).toList();
-          // final weekdaysValues = alarm.weekdaysValues ?? [];
 
           return Card(
             color: Colors.grey.shade900,
@@ -126,7 +119,6 @@ class AlarmPage extends State<MyHomePage> {
                         value: switchValue,
                         onChanged: (bool value) {
                           setState(() {
-                            // alarms[parentIndex].switchValue = value;
                             parentAlarms.switchValue = value;
                           });
                           preferencesService.saveAlarms(alarms);
@@ -160,7 +152,6 @@ class AlarmPage extends State<MyHomePage> {
                             value: childSwitchValue,
                             onChanged: (bool value) {
                               setState(() {
-                                // alarms.firstWhere((alarm) => alarm.id == parentAlarms.id && alarm.childId == childAlarm.childId).switchValue = value;
                                 childAlarm.switchValue = value;
                               });
                               preferencesService.saveAlarms(alarms);

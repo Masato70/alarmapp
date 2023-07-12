@@ -48,7 +48,6 @@ class TimePickerService {
       final AlarmCard selectedCard = parentAlarms[cardIndex];
       final parentId = selectedCard.id;
 
-      print("問題の箇所");
       print(alarms[cardIndex]);
       print(parentId);
 

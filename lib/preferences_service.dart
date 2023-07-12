@@ -58,7 +58,6 @@ class PreferencesService {
       alarms.clear();
       alarms.addAll(alarmCards!);
       print(alarms);
-      print("うう");
       callback();
     }
     print("loadAlarms Finish");
