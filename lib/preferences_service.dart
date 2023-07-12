@@ -24,8 +24,7 @@ class PreferencesService {
       final getAlarms = prefs.getStringList("alarmTime");
       final getSwitchValues = prefs.getStringList("switchValues");
 
-      print(
-          "loadAlarms shared get $getCardId $getIsParent $getChildId $getAlarms $getSwitchValues");
+      print("loadAlarms shared get $getCardId $getIsParent $getChildId $getAlarms $getSwitchValues");
 
       final alarmCards = getCardId?.map((cardId) {
         final index = getCardId.indexOf(cardId);

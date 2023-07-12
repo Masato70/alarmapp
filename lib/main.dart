@@ -114,11 +114,7 @@ class AlarmPage extends State<MyHomePage> {
                             // ),
                             TextButton.icon(
                               onPressed: () {
-                                timePickerService.childTimePicker(context, parentIndex, alarms, () {
-                                  setState(() {
-                                  });
-                                });
-                                print(parentIndex);
+                                timePickerService.childTimePicker(context, parentIndex, alarms, () {setState(() {});});
                               },
                               icon: Icon(Icons.add),
                               label: Text("時間を追加する"),
@@ -130,7 +126,8 @@ class AlarmPage extends State<MyHomePage> {
                         value: switchValue,
                         onChanged: (bool value) {
                           setState(() {
-                            alarms[parentIndex].switchValue = value;
+                            // alarms[parentIndex].switchValue = value;
+                            parentAlarms.switchValue = value;
                           });
                           preferencesService.saveAlarms(alarms);
                         },
@@ -165,7 +162,6 @@ class AlarmPage extends State<MyHomePage> {
                               setState(() {
                                 // alarms.firstWhere((alarm) => alarm.id == parentAlarms.id && alarm.childId == childAlarm.childId).switchValue = value;
                                 childAlarm.switchValue = value;
-
                               });
                               preferencesService.saveAlarms(alarms);
                             },
