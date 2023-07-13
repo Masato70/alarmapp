@@ -28,7 +28,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -46,8 +45,7 @@ class AlarmPage extends State<MyHomePage> {
     super.initState();
     PreferencesService preferencesService = PreferencesService();
     preferencesService.loadAlarms(alarms, () {
-      setState(() {
-      });
+      setState(() {});
     });
     setState(() {});
   }
@@ -64,104 +62,159 @@ class AlarmPage extends State<MyHomePage> {
         title: Text("アラーム"),
       ),
       body: ListView.builder(
-
         itemCount: alarms.where((alarm) => alarm.isParent).length,
         itemBuilder: (BuildContext context, int parentIndex) {
-
-          final parentAlarms = alarms.where((alarm) => alarm.isParent).toList().elementAt(parentIndex);
+          final parentAlarms = alarms
+              .where((alarm) => alarm.isParent)
+              .toList()
+              .elementAt(parentIndex);
           final switchValue = parentAlarms.switchValue;
-          final childAlarms = alarms.where((alarm) => alarm.childId == parentAlarms.id).toList();
+          final childAlarms = alarms
+              .where((alarm) => alarm.childId == parentAlarms.id)
+              .toList();
 
-          return Card(
-            color: Colors.grey.shade900,
-            child: Padding(
-              padding: EdgeInsets.all(35),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            //親アラーム時間
-                            Text(
-                              //したいこと
-                              //childIdがnullのカードだけを表示
-                              _formatTime(parentAlarms.alarmTime),
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: switchValue ? 50 : 49,
-                                color: switchValue ? Colors.white : Colors.grey,
+          return Dismissible(
+            key: UniqueKey(),
+            direction: DismissDirection.startToEnd,
+            background: Container(
+              color: Colors.red,
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: EdgeInsets.only(left: 20.0),
+                child: Icon(Icons.delete, color: Colors.white),
+              ),
+            ),
+            onDismissed: (direction) {
+              setState(() {
+                alarms.removeWhere((alarm) => alarm.id == parentAlarms.id || alarm.childId == parentAlarms.id);
+              });
+              preferencesService.saveAlarms(alarms);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("削除しました")),
+              );
+            },
+            child: Card(
+              color: Colors.grey.shade900,
+              child: Padding(
+                padding: EdgeInsets.all(35),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              //親アラーム時間
+                              Text(
+                                //したいこと
+                                //childIdがnullのカードだけを表示
+                                _formatTime(parentAlarms.alarmTime),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: switchValue ? 50 : 49,
+                                  color:
+                                      switchValue ? Colors.white : Colors.grey,
+                                ),
+                              ),
+                              // WeekdaySelector(
+                              //   onChanged: (int day) {
+                              //     setState(() {
+                              //       final index = day % 7;
+                              //       weekdaysValues[index] = !weekdaysValues[index];
+                              //     });
+                              //     _saveAlarms();
+                              //   },
+                              //   values: weekdaysValues,
+                              // ),
+                              TextButton.icon(
+                                onPressed: () {
+                                  timePickerService.childTimePicker(
+                                      context, parentIndex, alarms, () {
+                                    setState(() {});
+                                  });
+                                },
+                                icon: Icon(Icons.add),
+                                label: Text("時間を追加する"),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Switch(
+                          value: switchValue,
+                          onChanged: (bool value) {
+                            setState(() {
+                              parentAlarms.switchValue = value;
+                            });
+                            preferencesService.saveAlarms(alarms);
+                          },
+                        ),
+                      ],
+                    ),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: childAlarms.length,
+                      itemBuilder: (BuildContext context, int childIndex) {
+                        final childAlarm = childAlarms[childIndex];
+                        final childSwitchValue = childAlarm.switchValue;
+
+                        return Dismissible(
+                            key: UniqueKey(),
+                            direction: DismissDirection.startToEnd,
+                            background: Container(
+                              color: Colors.red,
+                              alignment: Alignment.centerLeft,
+                              child: Padding(
+                                padding: EdgeInsets.only(left: 10.0),
+                                child: Icon(Icons.delete, color: Colors.white),
                               ),
                             ),
-                            // WeekdaySelector(
-                            //   onChanged: (int day) {
-                            //     setState(() {
-                            //       final index = day % 7;
-                            //       weekdaysValues[index] = !weekdaysValues[index];
-                            //     });
-                            //     _saveAlarms();
-                            //   },
-                            //   values: weekdaysValues,
-                            // ),
-                            TextButton.icon(
-                              onPressed: () {
-                                timePickerService.childTimePicker(context, parentIndex, alarms, () {setState(() {});});
-                              },
-                              icon: Icon(Icons.add),
-                              label: Text("時間を追加する"),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Switch(
-                        value: switchValue,
-                        onChanged: (bool value) {
-                          setState(() {
-                            parentAlarms.switchValue = value;
-                          });
-                          preferencesService.saveAlarms(alarms);
-                        },
-                      ),
-                    ],
-                  ),
+                            onDismissed: (direction) {
+                              setState(() {
+                                // alarms.removeWhere((alarm) => alarm.id == parentAlarms.id || alarm.childId == parentAlarms.id);
+                                if (childAlarms.length > 0) {
+                                  alarms.removeWhere((alarm) => alarm.childId == parentAlarms.id);
+                                } else {
+                                  alarms.removeWhere((alarm) => alarm.id == parentAlarms.id);
+                                }
 
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: childAlarms.length,
-                    itemBuilder: (BuildContext context, int childIndex) {
-                      final childAlarm = childAlarms[childIndex];
-                      final childSwitchValue = childAlarm.switchValue;
+                              });
+                              preferencesService.saveAlarms(alarms);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("削除しました")),
+                              );
+                            },
 
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: ListTile(
-                              title: Text(
-                                _formatTime(childAlarm.alarmTime),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 30,
+                            child: Row(
+                          children: [
+                            Expanded(
+                              child: ListTile(
+                                title: Text(
+                                  _formatTime(childAlarm.alarmTime),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 30,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          Switch(
-                            value: childSwitchValue,
-                            onChanged: (bool value) {
-                              setState(() {
-                                childAlarm.switchValue = value;
-                              });
-                              preferencesService.saveAlarms(alarms);
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ],
+                            Switch(
+                              value: childSwitchValue,
+                              onChanged: (bool value) {
+                                setState(() {
+                                  childAlarm.switchValue = value;
+                                });
+                                preferencesService.saveAlarms(alarms);
+                              },
+                            ),
+                          ],
+                        )
+                        );
+                      }
+                    ),
+                  ],
+                ),
               ),
             ),
           );
