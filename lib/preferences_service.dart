@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:math';
-import 'package:alarm_clock/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'alarm_card.dart';
@@ -13,40 +10,43 @@ class PreferencesService {
     prefs = await SharedPreferences.getInstance();
 
     if (alarms != null && alarms.isNotEmpty) {
-
-
-      alarms?.sort((a, b) {
-        if (a.alarmTime.hour == b.alarmTime.hour) {
-          return a.alarmTime.minute.compareTo(b.alarmTime.minute);
-        }
-        return a.alarmTime.hour.compareTo(b.alarmTime.hour);
-      });
-
+      sortAlarms(alarms);
       callback();
       print("alarms != null $alarms");
     } else if (alarms.isEmpty) {
       //呼び出される時はアプリを開いた時のみ
       print("alarms null");
-      final getCardId = prefs.getStringList("cardID");
-      final getIsParent = prefs.getStringList("isParent");
-      final getChildId = prefs.getStringList("childId");
-      final getAlarms = prefs.getStringList("alarmTime");
-      final getSwitchValues = prefs.getStringList("switchValues");
+      final alarmCards = await getAlarmCardsFromSharedPreferences();
+      sortAlarms(alarmCards);
+      alarms.clear();
+      alarms.addAll(alarmCards);
+      print(alarms);
+      callback();
+    }
+    print("loadAlarms Finish");
+  }
 
-      print("loadAlarms shared get $getCardId $getIsParent $getChildId $getAlarms $getSwitchValues");
+  Future<List<AlarmCard>> getAlarmCardsFromSharedPreferences() async {
+    final getCardId = prefs.getStringList("cardID");
+    final getIsParent = prefs.getStringList("isParent");
+    final getChildId = prefs.getStringList("childId");
+    final getAlarms = prefs.getStringList("alarmTime");
+    final getSwitchValues = prefs.getStringList("switchValues");
 
-      final alarmCards = getCardId?.map((cardId) {
+    print("loadAlarms shared get $getCardId $getIsParent $getChildId $getAlarms $getSwitchValues");
+
+    if (getCardId != null && getIsParent != null && getChildId != null && getAlarms != null && getSwitchValues != null) {
+      final alarmCards = getCardId.map((cardId) {
         final index = getCardId.indexOf(cardId);
-        final isParent = getIsParent![index] == 'true';
-        final childId = getChildId![index];
+        final isParent = getIsParent[index] == 'true';
+        final childId = getChildId[index];
 
-        final alarmTimeString =
-            getAlarms![index].replaceAll('TimeOfDay(', '').replaceAll(')', '');
+        final alarmTimeString = getAlarms[index].replaceAll('TimeOfDay(', '').replaceAll(')', '');
         final alarmTimeParts = alarmTimeString.split(':');
         final hour = int.parse(alarmTimeParts[0]);
         final minute = int.parse(alarmTimeParts[1].split(' ')[0]);
         final alarmTime = TimeOfDay(hour: hour, minute: minute);
-        final switchValue = getSwitchValues![index] == 'true';
+        final switchValue = getSwitchValues[index] == 'true';
 
         return AlarmCard(
           id: cardId,
@@ -57,44 +57,30 @@ class PreferencesService {
         );
       }).toList();
 
-      alarmCards?.sort((a, b) {
-        if (a.alarmTime.hour == b.alarmTime.hour) {
-          return a.alarmTime.minute.compareTo(b.alarmTime.minute);
-        }
-        return a.alarmTime.hour.compareTo(b.alarmTime.hour);
-      });
-
-      alarms.clear();
-      alarms.addAll(alarmCards!);
-      print(alarms);
-      callback();
+      return alarmCards;
     }
-    print("loadAlarms Finish");
+    // デフォルトの空リストを返す
+    return [];
+  }
+
+  void sortAlarms(List<AlarmCard> alarms) {
+    alarms.sort((a, b) {
+      if (a.alarmTime.hour == b.alarmTime.hour) {
+        return a.alarmTime.minute.compareTo(b.alarmTime.minute);
+      }
+      return a.alarmTime.hour.compareTo(b.alarmTime.hour);
+    });
   }
 
   Future<void> saveAlarms(List<AlarmCard> alarms) async {
     print("start saveAlarms");
     prefs = await SharedPreferences.getInstance();
 
-    final id = alarms.map((alarm) {
-      return alarm.id;
-    }).toList();
-
-    final isParent = alarms.map((alarm) {
-      return alarm.isParent.toString();
-    }).toList();
-
-    final childId = alarms.map((alarm) {
-      return alarm.childId.toString();
-    }).toList();
-
-    final alarmTime = alarms.map((alarm) {
-      return alarm.alarmTime.toString();
-    }).toList();
-
-    final switchValues = alarms.map((alarm) {
-      return alarm.switchValue.toString();
-    }).toList();
+    final id = alarms.map((alarm) => alarm.id.toString()).toList();
+    final isParent = alarms.map((alarm) => alarm.isParent.toString()).toList();
+    final childId = alarms.map((alarm) => alarm.childId.toString()).toList();
+    final alarmTime = alarms.map((alarm) => alarm.alarmTime.toString()).toList();
+    final switchValues = alarms.map((alarm) => alarm.switchValue.toString()).toList();
 
     print("saveAlarms final check $id $isParent $childId $alarmTime $switchValues");
 

@@ -1,13 +1,8 @@
-import 'dart:convert';
-import 'dart:math';
 import 'package:alarm_clock/preferences_service.dart';
 import 'package:alarm_clock/time_picker_service.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:alarm_clock/alarm_card.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart';
 
 void main() {
   runApp(const MyApp());
@@ -215,9 +210,11 @@ class AlarmPage extends State<MyHomePage> {
                                   Switch(
                                     value: childSwitchValue,
                                     onChanged: (bool value) {
-                                      setState(() {
-                                        childAlarm.switchValue = value;
-                                      });
+                                      if (switchValue) {
+                                        setState(() {
+                                          childAlarm.switchValue = value;
+                                        });
+                                      }
                                       preferencesService.saveAlarms(alarms);
                                     },
                                   ),
