@@ -86,7 +86,9 @@ class AlarmPage extends State<MyHomePage> {
             ),
             onDismissed: (direction) {
               setState(() {
-                alarms.removeWhere((alarm) => alarm.id == parentAlarms.id || alarm.childId == parentAlarms.id);
+                alarms.removeWhere((alarm) =>
+                    alarm.id == parentAlarms.id ||
+                    alarm.childId == parentAlarms.id);
               });
               preferencesService.saveAlarms(alarms);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -145,6 +147,19 @@ class AlarmPage extends State<MyHomePage> {
                           onChanged: (bool value) {
                             setState(() {
                               parentAlarms.switchValue = value;
+                              if (value) {
+                                alarms
+                                    .where((alarm) =>
+                                        alarm.childId == parentAlarms.id)
+                                    .forEach(
+                                        (alarm) => alarm.switchValue = true);
+                              } else {
+                                alarms
+                                    .where((alarm) =>
+                                        alarm.childId == parentAlarms.id)
+                                    .forEach(
+                                        (alarm) => alarm.switchValue = false);
+                              }
                             });
                             preferencesService.saveAlarms(alarms);
                           },
@@ -152,67 +167,63 @@ class AlarmPage extends State<MyHomePage> {
                       ],
                     ),
                     ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: childAlarms.length,
-                      itemBuilder: (BuildContext context, int childIndex) {
-                        final childAlarm = childAlarms[childIndex];
-                        final childSwitchValue = childAlarm.switchValue;
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: childAlarms.length,
+                        itemBuilder: (BuildContext context, int childIndex) {
+                          final childAlarm = childAlarms[childIndex];
+                          final childSwitchValue = childAlarm.switchValue;
 
-                        return Dismissible(
-                            key: UniqueKey(),
-                            direction: DismissDirection.startToEnd,
-                            background: Container(
-                              color: Colors.red,
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: EdgeInsets.only(left: 10.0),
-                                child: Icon(Icons.delete, color: Colors.white),
-                              ),
-                            ),
-                            onDismissed: (direction) {
-                              setState(() {
-                                // alarms.removeWhere((alarm) => alarm.id == parentAlarms.id || alarm.childId == parentAlarms.id);
-                                if (childAlarms.length > 0) {
-                                  alarms.removeWhere((alarm) => alarm.childId == parentAlarms.id);
-                                } else {
-                                  alarms.removeWhere((alarm) => alarm.id == parentAlarms.id);
-                                }
-
-                              });
-                              preferencesService.saveAlarms(alarms);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("削除しました")),
-                              );
-                            },
-
-                            child: Row(
-                          children: [
-                            Expanded(
-                              child: ListTile(
-                                title: Text(
-                                  _formatTime(childAlarm.alarmTime),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 30,
-                                  ),
+                          return Dismissible(
+                              key: UniqueKey(),
+                              direction: DismissDirection.startToEnd,
+                              background: Container(
+                                color: Colors.red,
+                                alignment: Alignment.centerLeft,
+                                child: Padding(
+                                  padding: EdgeInsets.only(left: 10.0),
+                                  child:
+                                      Icon(Icons.delete, color: Colors.white),
                                 ),
                               ),
-                            ),
-                            Switch(
-                              value: childSwitchValue,
-                              onChanged: (bool value) {
+                              onDismissed: (direction) {
                                 setState(() {
-                                  childAlarm.switchValue = value;
+                                  alarms.removeWhere(
+                                      (alarm) => alarm.id == childAlarm.id);
                                 });
                                 preferencesService.saveAlarms(alarms);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("削除しました")),
+                                );
                               },
-                            ),
-                          ],
-                        )
-                        );
-                      }
-                    ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: ListTile(
+                                      title: Text(
+                                        _formatTime(childAlarm.alarmTime),
+                                        style: TextStyle(
+                                          color: childAlarm.switchValue
+                                              ? Colors.white
+                                              : Colors.grey,
+                                          fontSize: 40,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Switch(
+                                    value: childSwitchValue,
+                                    onChanged: (bool value) {
+                                      setState(() {
+                                        childAlarm.switchValue = value;
+                                      });
+                                      preferencesService.saveAlarms(alarms);
+                                    },
+                                  ),
+                                ],
+                              ));
+                        }),
                   ],
                 ),
               ),

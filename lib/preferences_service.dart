@@ -13,6 +13,15 @@ class PreferencesService {
     prefs = await SharedPreferences.getInstance();
 
     if (alarms != null && alarms.isNotEmpty) {
+
+
+      alarms?.sort((a, b) {
+        if (a.alarmTime.hour == b.alarmTime.hour) {
+          return a.alarmTime.minute.compareTo(b.alarmTime.minute);
+        }
+        return a.alarmTime.hour.compareTo(b.alarmTime.hour);
+      });
+
       callback();
       print("alarms != null $alarms");
     } else if (alarms.isEmpty) {
