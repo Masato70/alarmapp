@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'alarm_card.dart';
 
-class PreferencesService {
+class AlarmDataService {
   late SharedPreferences prefs;
 
   Future<void> loadAlarms(List<AlarmCard> alarms, Function callback) async {

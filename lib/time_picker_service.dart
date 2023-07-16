@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:alarm_clock/main.dart';
-import 'package:alarm_clock/preferences_service.dart';
+import 'package:alarm_clock/alarm_data_service.dart';
 import 'package:flutter/material.dart';
 import 'alarm_card.dart';
 import 'package:uuid/uuid.dart';
@@ -30,9 +30,9 @@ class TimePickerService {
       alarms.add(newAlarmCard);
       print('parentTimePicker alarms: $alarms');
 
-      PreferencesService preferencesService = PreferencesService();
-      await preferencesService.saveAlarms(alarms);
-      await preferencesService.loadAlarms(alarms, callback);
+      AlarmDataService alarmDataService = AlarmDataService();
+      await alarmDataService.saveAlarms(alarms);
+      await alarmDataService.loadAlarms(alarms, callback);
     }
   }
 
@@ -70,9 +70,9 @@ class TimePickerService {
       alarms.add(newAlarmCard);
       print('childTimePicker alarms: $alarms');
 
-      PreferencesService preferencesService = PreferencesService();
-      await preferencesService.saveAlarms(alarms);
-      await preferencesService.loadAlarms(alarms, callback);
+      AlarmDataService alarmDataService = AlarmDataService();
+      await alarmDataService.saveAlarms(alarms);
+      await alarmDataService.loadAlarms(alarms, callback);
     }
   }
 }

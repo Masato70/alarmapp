@@ -1,4 +1,4 @@
-import 'package:alarm_clock/preferences_service.dart';
+import 'package:alarm_clock/alarm_data_service.dart';
 import 'package:alarm_clock/time_picker_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -38,8 +38,8 @@ class AlarmPage extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    PreferencesService preferencesService = PreferencesService();
-    preferencesService.loadAlarms(alarms, () {
+    AlarmDataService alarmDataService = AlarmDataService();
+    alarmDataService.loadAlarms(alarms, () {
       setState(() {});
     });
     setState(() {});
@@ -47,7 +47,7 @@ class AlarmPage extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    PreferencesService preferencesService = PreferencesService();
+    AlarmDataService alarmDataService = AlarmDataService();
     TimePickerService timePickerService = TimePickerService();
     print("main: $alarms");
     return Scaffold(
@@ -85,7 +85,7 @@ class AlarmPage extends State<MyHomePage> {
                     alarm.id == parentAlarms.id ||
                     alarm.childId == parentAlarms.id);
               });
-              preferencesService.saveAlarms(alarms);
+              alarmDataService.saveAlarms(alarms);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text("削除しました")),
               );
@@ -147,7 +147,7 @@ class AlarmPage extends State<MyHomePage> {
                                           (alarm) => alarm.switchValue = false);
                                 }
                               });
-                              preferencesService.saveAlarms(alarms);
+                              alarmDataService.saveAlarms(alarms);
                             },
                           ),
                         )
@@ -189,7 +189,7 @@ class AlarmPage extends State<MyHomePage> {
                                 setState(() {
                                   alarms.removeWhere((alarm) => alarm.id == childAlarm.id);
                                 });
-                                preferencesService.saveAlarms(alarms);
+                                alarmDataService.saveAlarms(alarms);
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text("削除しました")),
                                 );
@@ -216,7 +216,7 @@ class AlarmPage extends State<MyHomePage> {
                                           childAlarm.switchValue = value;
                                         });
                                       }
-                                      preferencesService.saveAlarms(alarms);
+                                      alarmDataService.saveAlarms(alarms);
                                     },
                                   ),
                                 ],
