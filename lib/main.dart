@@ -102,7 +102,6 @@ class AlarmPage extends State<MyHomePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              //親アラーム時間
                               Text(
                                 //したいこと
                                 //childIdがnullのカードだけを表示
@@ -124,40 +123,46 @@ class AlarmPage extends State<MyHomePage> {
                               //   },
                               //   values: weekdaysValues,
                               // ),
-                              TextButton.icon(
-                                onPressed: () {
-                                  timePickerService.childTimePicker(
-                                      context, parentIndex, alarms, () {
-                                    setState(() {});
-                                  });
-                                },
-                                icon: Icon(Icons.add),
-                                label: Text("時間を追加する"),
-                              ),
                             ],
                           ),
                         ),
-                        Switch(
-                          value: switchValue,
-                          onChanged: (bool value) {
-                            setState(() {
-                              parentAlarms.switchValue = value;
-                              if (value) {
-                                alarms
-                                    .where((alarm) =>
-                                        alarm.childId == parentAlarms.id)
-                                    .forEach(
-                                        (alarm) => alarm.switchValue = true);
-                              } else {
-                                alarms
-                                    .where((alarm) =>
-                                        alarm.childId == parentAlarms.id)
-                                    .forEach(
-                                        (alarm) => alarm.switchValue = false);
-                              }
-                            });
-                            preferencesService.saveAlarms(alarms);
+                        Transform.scale(
+                          scale: 1.1,
+                          child:  Switch(
+                            value: switchValue,
+                            onChanged: (bool value) {
+                              setState(() {
+                                parentAlarms.switchValue = value;
+                                if (value) {
+                                  alarms
+                                      .where((alarm) =>
+                                  alarm.childId == parentAlarms.id)
+                                      .forEach(
+                                          (alarm) => alarm.switchValue = true);
+                                } else {
+                                  alarms
+                                      .where((alarm) =>
+                                  alarm.childId == parentAlarms.id)
+                                      .forEach(
+                                          (alarm) => alarm.switchValue = false);
+                                }
+                              });
+                              preferencesService.saveAlarms(alarms);
+                            },
+                          ),
+                        )
+
+                      ],
+                    ),
+                    Row(
+                      // mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () {
+                            timePickerService.childTimePicker(context, parentIndex, alarms, () {setState(() {});},);
                           },
+                          icon: Icon(Icons.add, color: Colors.blue), // アイコンの色を白色に設定
+                          label: Text("時間を追加する"),
                         ),
                       ],
                     ),
@@ -177,14 +182,12 @@ class AlarmPage extends State<MyHomePage> {
                                 alignment: Alignment.centerLeft,
                                 child: Padding(
                                   padding: EdgeInsets.only(left: 10.0),
-                                  child:
-                                      Icon(Icons.delete, color: Colors.white),
+                                  child: Icon(Icons.delete, color: Colors.white),
                                 ),
                               ),
                               onDismissed: (direction) {
                                 setState(() {
-                                  alarms.removeWhere(
-                                      (alarm) => alarm.id == childAlarm.id);
+                                  alarms.removeWhere((alarm) => alarm.id == childAlarm.id);
                                 });
                                 preferencesService.saveAlarms(alarms);
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -197,10 +200,8 @@ class AlarmPage extends State<MyHomePage> {
                                     child: ListTile(
                                       title: Text(
                                         _formatTime(childAlarm.alarmTime),
-                                        style: TextStyle(
-                                          color: childAlarm.switchValue
-                                              ? Colors.white
-                                              : Colors.grey,
+                                        textAlign: TextAlign.start,
+                                        style: TextStyle(color: childAlarm.switchValue ? Colors.white : Colors.grey,
                                           fontSize: 40,
                                           fontWeight: FontWeight.w600,
                                         ),
