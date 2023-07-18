@@ -1,4 +1,5 @@
 import 'package:alarm_clock/alarm_data_service.dart';
+import 'package:alarm_clock/alarm_manager.dart';
 import 'package:alarm_clock/time_picker_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -42,6 +43,8 @@ class AlarmPage extends State<MyHomePage> {
     alarmDataService.loadAlarms(alarms, () {
       setState(() {});
     });
+    AlarmManager alarmManager = AlarmManager();
+    alarmManager.startAlarmTimer(context, alarms);
     setState(() {});
   }
 

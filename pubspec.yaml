@@ -30,6 +30,8 @@ environment:
 dependencies:
   weekday_selector: ^1.1.0
   path_provider: ^2.0.2
+  android_alarm_manager_plus: ^3.0.1
+
 
   #  weekday_selector: ^1.0.0-nullsafety.0
   flutter:
@@ -42,6 +44,7 @@ dependencies:
 
 dev_dependencies:
   shared_preferences: ^2.1.1
+  audioplayers: ^4.1.0
 
   flutter_test:
     sdk: flutter
@@ -58,6 +61,9 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/ringtone-126505.mp3
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
