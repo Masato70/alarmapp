@@ -1,28 +1,29 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'alarm_card.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
-
 
 class AlarmManager {
   AudioPlayer audioPlayer = AudioPlayer();
   bool isAlarmRinging = false;
   Timer? alarmTimer;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
-  Future<void> startAlarmTimer(BuildContext context, List<AlarmCard> alarms) async {
+  Future<void> startAlarmTimer(
+      BuildContext context, List<AlarmCard> alarms) async {
     alarmTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       final currentTime = TimeOfDay.now();
       final setAlarms = alarms.where((alarm) => alarm.switchValue).toList();
 
       for (var alarm in setAlarms) {
-        print(currentTime.hour + currentTime.minute == alarm.alarmTime.hour + alarm.alarmTime.minute && !isAlarmRinging);
-        print(alarms.where((alarm) => alarm.switchValue).toList());
-        if (currentTime.hour + currentTime.minute == alarm.alarmTime.hour + alarm.alarmTime.minute && !isAlarmRinging) {
-          print("い?");
+        if (currentTime.hour + currentTime.minute ==
+                alarm.alarmTime.hour + alarm.alarmTime.minute &&
+            !isAlarmRinging) {
+          print("アラームがなります");
           playSound();
-          print("う?");
-          break;
         }
       }
     });
@@ -46,5 +47,31 @@ class AlarmManager {
     //アラームをストップするとき
     audioPlayer.stop();
     isAlarmRinging = false;
+  }
+
+  Future<void> requestPermissions() async {
+    if (Platform.isIOS || Platform.isMacOS) {
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              MacOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+    } else if (Platform.isAndroid) {
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+          flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      await androidImplementation?.requestPermission();
+    }
   }
 }

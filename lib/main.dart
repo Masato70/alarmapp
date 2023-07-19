@@ -4,8 +4,14 @@ import 'package:alarm_clock/time_picker_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:alarm_clock/alarm_card.dart';
+import 'package:alarm_clock/alarm_manager.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  // AndroidAlarmManager.initialize();
   runApp(const MyApp());
 }
 
@@ -14,6 +20,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AlarmManager alarmManager = AlarmManager();
+    alarmManager.requestPermissions();
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
