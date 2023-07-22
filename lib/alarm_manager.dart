@@ -37,6 +37,7 @@ class AlarmManager {
       player.setReleaseMode(ReleaseMode.loop);
       isAlarmRinging = true;
       print("アラーム音が再生しました");
+      _showNotification();
     } catch (e) {
       print("アラーム音の再生中にエラーが発生しました");
       isAlarmRinging = false;
@@ -72,6 +73,44 @@ class AlarmManager {
           flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
       await androidImplementation?.requestPermission();
+    }
+  }
+
+  Future<void> _showNotification() async {
+    const AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
+      'your channel id',
+      'your channel name',
+      channelDescription: 'your channel description',
+      importance: Importance.max,
+      priority: Priority.high,
+      icon: "aass",
+      enableVibration: false,
+      ticker: 'ticker',
+      actions: <AndroidNotificationAction>[AndroidNotificationAction(
+          'stop_action',
+          'ストップ',
+        ),
+      ],
+    );
+    const NotificationDetails notificationDetails = NotificationDetails(android: androidNotificationDetails,);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      'アラーム',
+      'アラームを止めますか？',
+      notificationDetails,
+      payload: 'stop_action',
+    );
+  }
+
+  void callbackDispatcher(String? payload) {
+    // payload を _onNotificationButtonPressed メソッドに渡す
+    _onNotificationButtonPressed(payload ?? '');
+  }
+
+  void _onNotificationButtonPressed(String payload) {
+    if (payload == 'stop_action') {
+      stopSound();
     }
   }
 }
