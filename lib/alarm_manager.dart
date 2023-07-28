@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'alarm_card.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,26 @@ class AlarmManager {
   Timer? alarmTimer;
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  AlarmManager() {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('tokei_clock_icon_2066');
+
+    const DarwinInitializationSettings initializationSettingsDarwin =
+        DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(
+            android: initializationSettingsAndroid,
+            iOS: initializationSettingsDarwin);
+
+    flutterLocalNotificationsPlugin.initialize(initializationSettings,
+        onDidReceiveNotificationResponse: _notificationOnSelect);
+  }
 
   Future<void> startAlarmTimer(
       BuildContext context, List<AlarmCard> alarms) async {
@@ -30,7 +51,6 @@ class AlarmManager {
   }
 
   Future<void> playSound() async {
-    //アラームを流すとき
     try {
       final player = audioPlayer;
       await player.play(AssetSource("ringtone-126505.mp3"));
@@ -45,7 +65,6 @@ class AlarmManager {
   }
 
   void stopSound() {
-    //アラームをストップするとき
     audioPlayer.stop();
     isAlarmRinging = false;
   }
@@ -77,22 +96,36 @@ class AlarmManager {
   }
 
   Future<void> _showNotification() async {
-    const AndroidNotificationDetails androidNotificationDetails = AndroidNotificationDetails(
+    print("通知準備");
+    const AndroidNotificationDetails androidNotificationDetails =
+        AndroidNotificationDetails(
       'your channel id',
       'your channel name',
       channelDescription: 'your channel description',
       importance: Importance.max,
       priority: Priority.high,
-      icon: "aass",
+      icon: "tokei_clock_icon_2066",
       enableVibration: false,
       ticker: 'ticker',
-      actions: <AndroidNotificationAction>[AndroidNotificationAction(
+      actions: <AndroidNotificationAction>[
+        AndroidNotificationAction(
           'stop_action',
           'ストップ',
+          icon: DrawableResourceAndroidBitmap('tokei_clock_icon_2066'),
+          contextual: true,
         ),
       ],
     );
-    const NotificationDetails notificationDetails = NotificationDetails(android: androidNotificationDetails,);
+
+    const String darwinNotificationCategoryPlain = 'plainCategory';
+
+    const DarwinNotificationDetails iosNotificationDetails =
+        DarwinNotificationDetails(
+      categoryIdentifier: darwinNotificationCategoryPlain,
+    );
+
+    const NotificationDetails notificationDetails = NotificationDetails(
+        android: androidNotificationDetails, iOS: iosNotificationDetails);
 
     await flutterLocalNotificationsPlugin.show(
       0,
@@ -103,13 +136,11 @@ class AlarmManager {
     );
   }
 
-  void callbackDispatcher(String? payload) {
-    // payload を _onNotificationButtonPressed メソッドに渡す
-    _onNotificationButtonPressed(payload ?? '');
-  }
-
-  void _onNotificationButtonPressed(String payload) {
-    if (payload == 'stop_action') {
+  void _notificationOnSelect(NotificationResponse? payload) async {
+    String payloadValue = payload?.payload ?? '';
+    print("通知がタップされました。Payload: $payloadValue");
+    if (payloadValue == 'stop_action' && isAlarmRinging) {
+      print("アラームストップメソッド呼び出し");
       stopSound();
     }
   }
