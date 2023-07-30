@@ -139,7 +139,7 @@ class AlarmPage extends State<MyHomePage> {
                         ),
                         Transform.scale(
                           scale: 1.1,
-                          child:  Switch(
+                          child: Switch(
                             value: switchValue,
                             onChanged: (bool value) {
                               setState(() {
@@ -147,13 +147,13 @@ class AlarmPage extends State<MyHomePage> {
                                 if (value) {
                                   alarms
                                       .where((alarm) =>
-                                  alarm.childId == parentAlarms.id)
+                                          alarm.childId == parentAlarms.id)
                                       .forEach(
                                           (alarm) => alarm.switchValue = true);
                                 } else {
                                   alarms
                                       .where((alarm) =>
-                                  alarm.childId == parentAlarms.id)
+                                          alarm.childId == parentAlarms.id)
                                       .forEach(
                                           (alarm) => alarm.switchValue = false);
                                 }
@@ -162,7 +162,6 @@ class AlarmPage extends State<MyHomePage> {
                             },
                           ),
                         )
-
                       ],
                     ),
                     Row(
@@ -170,9 +169,17 @@ class AlarmPage extends State<MyHomePage> {
                       children: [
                         TextButton.icon(
                           onPressed: () {
-                            timePickerService.childTimePicker(context, parentIndex, alarms, () {setState(() {});},);
+                            timePickerService.childTimePicker(
+                              context,
+                              parentIndex,
+                              alarms,
+                              () {
+                                setState(() {});
+                              },
+                            );
                           },
-                          icon: Icon(Icons.add, color: Colors.blue), // アイコンの色を白色に設定
+                          icon: Icon(Icons.add, color: Colors.blue),
+                          // アイコンの色を白色に設定
                           label: Text("時間を追加する"),
                         ),
                       ],
@@ -193,12 +200,14 @@ class AlarmPage extends State<MyHomePage> {
                                 alignment: Alignment.centerLeft,
                                 child: Padding(
                                   padding: EdgeInsets.only(left: 10.0),
-                                  child: Icon(Icons.delete, color: Colors.white),
+                                  child:
+                                      Icon(Icons.delete, color: Colors.white),
                                 ),
                               ),
                               onDismissed: (direction) {
                                 setState(() {
-                                  alarms.removeWhere((alarm) => alarm.id == childAlarm.id);
+                                  alarms.removeWhere(
+                                      (alarm) => alarm.id == childAlarm.id);
                                 });
                                 alarmDataService.saveAlarms(alarms);
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -212,7 +221,10 @@ class AlarmPage extends State<MyHomePage> {
                                       title: Text(
                                         _formatTime(childAlarm.alarmTime),
                                         textAlign: TextAlign.start,
-                                        style: TextStyle(color: childAlarm.switchValue ? Colors.white : Colors.grey,
+                                        style: TextStyle(
+                                          color: childAlarm.switchValue
+                                              ? Colors.white
+                                              : Colors.grey,
                                           fontSize: 40,
                                           fontWeight: FontWeight.w600,
                                         ),

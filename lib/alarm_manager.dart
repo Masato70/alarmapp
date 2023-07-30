@@ -31,6 +31,8 @@ class AlarmManager {
 
     flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onDidReceiveNotificationResponse: _notificationOnSelect);
+
+    print("通知の初期化が完了しました");
   }
 
   Future<void> startAlarmTimer(
@@ -70,6 +72,8 @@ class AlarmManager {
   }
 
   Future<void> requestPermissions() async {
+    print("通知のパーミッションを要求する直後");
+
     if (Platform.isIOS || Platform.isMacOS) {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
@@ -105,6 +109,7 @@ class AlarmManager {
       importance: Importance.max,
       priority: Priority.high,
       icon: "tokei_clock_icon_2066",
+      fullScreenIntent: true,
       enableVibration: false,
       ticker: 'ticker',
       actions: <AndroidNotificationAction>[
