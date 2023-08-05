@@ -5,11 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:alarm_clock/alarm_card.dart';
 import 'package:alarm_clock/alarm_manager.dart';
+import 'package:alarm_clock/alarm_manager.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:alarm/alarm.dart';
 
-void main() {
+
+void main() async{
   WidgetsFlutterBinding.ensureInitialized();
+  // await AndroidAlarmManager.initialize();
+  await Alarm.init();
 
   runApp(const MyApp());
 }
@@ -43,15 +48,19 @@ class MyHomePage extends StatefulWidget {
 
 class AlarmPage extends State<MyHomePage> {
   List<AlarmCard> alarms = [];
+    AlarmManager alarmManager = AlarmManager();
 
   @override
   void initState() {
     super.initState();
+
+    AndroidAlarmManager.initialize();
+
+
     AlarmDataService alarmDataService = AlarmDataService();
     alarmDataService.loadAlarms(alarms, () {
       setState(() {});
     });
-    AlarmManager alarmManager = AlarmManager();
     alarmManager.startAlarmTimer(context, alarms);
     setState(() {});
   }
@@ -81,7 +90,7 @@ class AlarmPage extends State<MyHomePage> {
 
           return Dismissible(
             key: UniqueKey(),
-            direction: DismissDirection.startToEnd,
+            direction: DismissDirection.endToStart,
             background: Container(
               color: Colors.red,
               alignment: Alignment.centerLeft,
@@ -114,8 +123,6 @@ class AlarmPage extends State<MyHomePage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                //したいこと
-                                //childIdがnullのカードだけを表示
                                 _formatTime(parentAlarms.alarmTime),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -165,7 +172,6 @@ class AlarmPage extends State<MyHomePage> {
                       ],
                     ),
                     Row(
-                      // mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         TextButton.icon(
                           onPressed: () {
