@@ -4,7 +4,10 @@ import 'alarm_card.dart';
 import 'package:uuid/uuid.dart';
 
 class TimePickerService {
-  Future<void> parentTimePicker(BuildContext context, List<AlarmCard> alarms, Function callback) async {
+  AlarmDataService alarmDataService = AlarmDataService();
+
+  Future<void> parentTimePicker(
+      BuildContext context, List<AlarmCard> alarms, Function callback) async {
     final TimeOfDay? timePicked = await showTimePicker(
         context: context, initialTime: TimeOfDay(hour: 6, minute: 0));
 
@@ -27,20 +30,21 @@ class TimePickerService {
       alarms.add(newAlarmCard);
       print('parentTimePicker alarms: $alarms');
 
-      AlarmDataService alarmDataService = AlarmDataService();
       await alarmDataService.saveAlarms(alarms);
       await alarmDataService.loadAlarms(alarms, callback);
     }
   }
 
-  Future<void> childTimePicker(BuildContext context, int cardIndex, List<AlarmCard> alarms, Function callback) async {
+  Future<void> childTimePicker(BuildContext context, int cardIndex,
+      List<AlarmCard> alarms, Function callback) async {
     final TimeOfDay? timePicked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: 6, minute: 0),
     );
 
     if (timePicked != null) {
-      final List<AlarmCard> parentAlarms = alarms.where((alarm) => alarm.isParent).toList();
+      final List<AlarmCard> parentAlarms =
+          alarms.where((alarm) => alarm.isParent).toList();
       final AlarmCard selectedCard = parentAlarms[cardIndex];
       final parentId = selectedCard.id;
 
@@ -66,7 +70,6 @@ class TimePickerService {
       alarms.add(newAlarmCard);
       print('childTimePicker alarms: $alarms');
 
-      AlarmDataService alarmDataService = AlarmDataService();
       await alarmDataService.saveAlarms(alarms);
       await alarmDataService.loadAlarms(alarms, callback);
     }

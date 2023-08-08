@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:alarm_clock/alarm_data_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'alarm_card.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -13,7 +14,8 @@ class AlarmManager {
   Timer? alarmTimer;
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
-  List<AlarmCard> alarms = [];
+  late SharedPreferences prefs;
+  AlarmDataService alarmDataService = AlarmDataService();
 
   AlarmManager() {
     _initializeNotifications();
@@ -40,18 +42,21 @@ class AlarmManager {
   }
 
   Future<void> startAlarmTimer(
-      BuildContext context, List<AlarmCard> alarms) async {
+      BuildContext context, List<AlarmCard> alarms, Function callback) async {
     alarmTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       final currentTime = TimeOfDay.now();
       final setAlarms = alarms.where((alarm) => alarm.switchValue).toList();
 
       for (var alarm in setAlarms) {
-        if (currentTime.hour + currentTime.minute ==
-                alarm.alarmTime.hour + alarm.alarmTime.minute &&
+        if (currentTime.hour == alarm.alarmTime.hour &&
+            currentTime.minute == alarm.alarmTime.minute &&
             !isAlarmRinging) {
           print("アラームがなります - アラームID: ${alarm.id}");
+          print(alarms);
           _playAlarmSound(alarm.id);
           alarm.switchValue = false;
+          alarmDataService.saveAlarms(alarms);
+          alarmDataService.loadAlarms(alarms, callback);
         }
       }
     });
@@ -70,17 +75,10 @@ class AlarmManager {
     }
   }
 
-  void stopAlarmSound(String alarmId,List<AlarmCard> alarms) async {
+  void stopAlarmSound(String alarmId) async {
     audioPlayer.stop();
     isAlarmRinging = false;
     print("アラームを停止しました");
-
-    for (var alarm in alarms) {
-      if (alarm.id == alarmId) {
-        alarm.switchValue = false;
-        break; // IDが一致したらループを終了
-      }
-    }
   }
 
   Future<void> requestPermissions() async {
@@ -144,14 +142,13 @@ class AlarmManager {
     );
   }
 
-  void _handleNotificationAction(NotificationResponse? payload) async {
+  Future<void> _handleNotificationAction(NotificationResponse? payload) async {
     String payloadValue = payload?.payload ?? '';
     print("通知がタップされました。Payload: $payloadValue");
 
-    if (payloadValue.startsWith('stop_action:') && isAlarmRinging) {
+    if (payloadValue.startsWith('stop_action:')) {
       String alarmId = payloadValue.split(':').last;
-      // アラームIDを元にアラームカードのスイッチをオフにする
-      stopAlarmSound(alarmId, alarms);
+      stopAlarmSound(alarmId);
     }
   }
 }

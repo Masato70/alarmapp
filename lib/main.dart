@@ -10,8 +10,7 @@ import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:alarm/alarm.dart';
 
-
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // await AndroidAlarmManager.initialize();
   await Alarm.init();
@@ -48,20 +47,20 @@ class MyHomePage extends StatefulWidget {
 
 class AlarmPage extends State<MyHomePage> {
   List<AlarmCard> alarms = [];
-    AlarmManager alarmManager = AlarmManager();
+  AlarmDataService alarmDataService = AlarmDataService();
+  AlarmManager alarmManager = AlarmManager();
 
   @override
   void initState() {
     super.initState();
-
     AndroidAlarmManager.initialize();
 
-
-    AlarmDataService alarmDataService = AlarmDataService();
     alarmDataService.loadAlarms(alarms, () {
       setState(() {});
     });
-    alarmManager.startAlarmTimer(context, alarms);
+
+    alarmManager.startAlarmTimer(context, alarms, () {});
+
     setState(() {});
   }
 
@@ -90,7 +89,7 @@ class AlarmPage extends State<MyHomePage> {
 
           return Dismissible(
             key: UniqueKey(),
-            direction: DismissDirection.endToStart,
+            direction: DismissDirection.startToEnd,
             background: Container(
               color: Colors.red,
               alignment: Alignment.centerLeft,
