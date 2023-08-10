@@ -4,15 +4,11 @@ import 'package:alarm_clock/time_picker_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:alarm_clock/alarm_card.dart';
-import 'package:alarm_clock/alarm_manager.dart';
-import 'package:alarm_clock/alarm_manager.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:alarm/alarm.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // await AndroidAlarmManager.initialize();
   await Alarm.init();
 
   runApp(const MyApp());

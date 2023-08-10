@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:alarm_clock/alarm_data_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'alarm_card.dart';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:vibration/vibration.dart';
 
 class AlarmManager {
   AudioPlayer audioPlayer = AudioPlayer();
@@ -14,8 +13,8 @@ class AlarmManager {
   Timer? alarmTimer;
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
-  late SharedPreferences prefs;
   AlarmDataService alarmDataService = AlarmDataService();
+  Timer? vibrationTimer;
 
   AlarmManager() {
     _initializeNotifications();
@@ -68,6 +67,7 @@ class AlarmManager {
       audioPlayer.setReleaseMode(ReleaseMode.loop);
       isAlarmRinging = true;
       _showNotification(alarmId);
+      startVibration();
       print("アラーム音が再生しました");
     } catch (e) {
       print("アラーム音の再生中にエラーが発生しました $e");
@@ -75,10 +75,22 @@ class AlarmManager {
     }
   }
 
+  void startVibration() async {
+    vibrationTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      Vibration.vibrate(duration: 500);
+    });
+  }
+
   void stopAlarmSound(String alarmId) async {
     audioPlayer.stop();
     isAlarmRinging = false;
+
     print("アラームを停止しました");
+  }
+
+  void stopVibration() {
+    vibrationTimer?.cancel();
+    Vibration.cancel();
   }
 
   Future<void> requestPermissions() async {
@@ -149,6 +161,7 @@ class AlarmManager {
     if (payloadValue.startsWith('stop_action:')) {
       String alarmId = payloadValue.split(':').last;
       stopAlarmSound(alarmId);
+      stopVibration();
     }
   }
 }
