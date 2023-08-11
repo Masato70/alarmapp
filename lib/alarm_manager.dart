@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:alarm_clock/alarm_data_service.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'alarm_card.dart';
 import 'package:flutter/material.dart';
@@ -8,11 +9,23 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:vibration/vibration.dart';
 
 class AlarmManager {
+  static const MethodChannel _channel = const MethodChannel('Alarm');
+
+  // static Future<void> startAlarmAndVibration() async {
+  //   await _channel.invokeMethod('startAlarmAndVibration');
+  // }
+  static Future<void> startAlarmAndVibration(DateTime alarmTime) async {
+    await _channel.invokeMethod('startAlarmAndVibration',
+        {'alarmTime': alarmTime.millisecondsSinceEpoch});
+  }
+
   AudioPlayer audioPlayer = AudioPlayer();
   bool isAlarmRinging = false;
   Timer? alarmTimer;
+
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
   AlarmDataService alarmDataService = AlarmDataService();
   Timer? vibrationTimer;
 
@@ -61,38 +74,6 @@ class AlarmManager {
     });
   }
 
-  Future<void> _playAlarmSound(String alarmId) async {
-    try {
-      await audioPlayer.play(AssetSource("ringtone-126505.mp3"));
-      audioPlayer.setReleaseMode(ReleaseMode.loop);
-      isAlarmRinging = true;
-      _showNotification(alarmId);
-      startVibration();
-      print("アラーム音が再生しました");
-    } catch (e) {
-      print("アラーム音の再生中にエラーが発生しました $e");
-      isAlarmRinging = false;
-    }
-  }
-
-  void startVibration() async {
-    vibrationTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      Vibration.vibrate(duration: 500);
-    });
-  }
-
-  void stopAlarmSound(String alarmId) async {
-    audioPlayer.stop();
-    isAlarmRinging = false;
-
-    print("アラームを停止しました");
-  }
-
-  void stopVibration() {
-    vibrationTimer?.cancel();
-    Vibration.cancel();
-  }
-
   Future<void> requestPermissions() async {
     print("通知のパーミッションを要求する直後");
 
@@ -118,50 +99,6 @@ class AlarmManager {
           flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>();
       await androidImplementation?.requestPermission();
-    }
-  }
-
-  Future<void> _showNotification(String alarmId) async {
-    const AndroidNotificationDetails androidNotificationDetails =
-        AndroidNotificationDetails(
-      'your channel id',
-      'your channel name',
-      channelDescription: 'your channel description',
-      importance: Importance.max,
-      priority: Priority.high,
-      icon: "tokei_clock_icon_2066",
-      fullScreenIntent: true,
-      enableVibration: true,
-      ticker: 'ticker',
-    );
-
-    const String darwinNotificationCategoryPlain = 'plainCategory';
-    const DarwinNotificationDetails iosNotificationDetails =
-        DarwinNotificationDetails(
-      presentAlert: true,
-      categoryIdentifier: darwinNotificationCategoryPlain,
-    );
-
-    const NotificationDetails notificationDetails = NotificationDetails(
-        android: androidNotificationDetails, iOS: iosNotificationDetails);
-
-    await flutterLocalNotificationsPlugin.show(
-      0,
-      'アラーム',
-      'ストップ',
-      notificationDetails,
-      payload: 'stop_action:$alarmId',
-    );
-  }
-
-  Future<void> _handleNotificationAction(NotificationResponse? payload) async {
-    String payloadValue = payload?.payload ?? '';
-    print("通知がタップされました。Payload: $payloadValue");
-
-    if (payloadValue.startsWith('stop_action:')) {
-      String alarmId = payloadValue.split(':').last;
-      stopAlarmSound(alarmId);
-      stopVibration();
     }
   }
 }
