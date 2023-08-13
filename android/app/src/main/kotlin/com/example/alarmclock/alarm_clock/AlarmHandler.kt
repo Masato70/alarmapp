@@ -2,7 +2,10 @@ package com.example.alarmclock.alarm_clock
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.PowerManager
 import android.os.VibrationEffect
@@ -40,13 +43,31 @@ class AlarmHandler(private val context: Context) {
 
 
     private fun vibrate() {
+        vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // パターンを定義（ここでは1秒バイブ、1秒待機、1秒バイブ...）
+            val pattern = longArrayOf(0, 1000, 1000)
+            val vibrationEffect = VibrationEffect.createWaveform(pattern, -1) // -1は無限ループを意味するsuru
+            vibrator.vibrate(vibrationEffect)
+        } else {
+            @Suppress("DEPRECATION")
+            // 古いAPIバージョンの場合
+            vibrator.vibrate(longArrayOf(0, 1000, 1000), 0)
+        }
     }
 
-    private fun showNotification() {
+     fun stopVibration() {
+        vibrator.cancel()
+    }
 
+
+    private fun showNotification() {
         val notificationManager = NotificationManagerCompat.from(context)
+
+        val tapIntent = Intent(context, NotificationTapReceiver::class.java)
+        tapIntent.action = "STOP_VIBRATION"
+        val tapPendingIntent = PendingIntent.getBroadcast(context, 0, tapIntent, 0)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -75,9 +96,19 @@ class AlarmHandler(private val context: Context) {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setFullScreenIntent(null, true)
             .setTicker("ticker")
+            .setContentIntent(tapPendingIntent)
             .build()
 
         notificationManager.notify(0, androidNotificationBuilder)
+    }
+}
 
+
+class NotificationTapReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context?, intent: Intent?) {
+        if (intent?.action == "STOP_VIBRATION") {
+            val alarmHandler = AlarmHandler(context!!)
+            alarmHandler.stopVibration()
+        }
     }
 }

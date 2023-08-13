@@ -55,7 +55,8 @@ class AlarmPage extends State<MyHomePage> {
       setState(() {});
     });
 
-    alarmManager.startAlarmTimer(context, alarms, () {});
+
+    AlarmManager.startAlarmAndVibration(alarms);
 
     setState(() {});
   }
