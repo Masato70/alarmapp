@@ -21,6 +21,7 @@ class AlarmManager {
     _initializeNotifications();
   }
 
+
   void _initializeNotifications() {
     final AndroidInitializationSettings androidInitializationSettings =
         AndroidInitializationSettings('tokei_clock_icon_2066');
@@ -41,26 +42,26 @@ class AlarmManager {
         onDidReceiveNotificationResponse: _handleNotificationAction);
   }
 
-  Future<void> startAlarmTimer(
-      BuildContext context, List<AlarmCard> alarms, Function callback) async {
-    alarmTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      final currentTime = TimeOfDay.now();
-      final setAlarms = alarms.where((alarm) => alarm.switchValue).toList();
-
-      for (var alarm in setAlarms) {
-        if (currentTime.hour == alarm.alarmTime.hour &&
-            currentTime.minute == alarm.alarmTime.minute &&
-            !isAlarmRinging) {
-          print("アラームがなります - アラームID: ${alarm.id}");
-          print(alarms);
-          _playAlarmSound();
-          alarm.switchValue = false;
-          alarmDataService.saveAlarms(alarms);
-          alarmDataService.loadAlarms(alarms, callback);
-        }
-      }
-    });
-  }
+  // Future<void> startAlarmTimer(
+  //     BuildContext context, List<AlarmCard> alarms, Function callback) async {
+  //   alarmTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+  //     final currentTime = TimeOfDay.now();
+  //     final setAlarms = alarms.where((alarm) => alarm.switchValue).toList();
+  //
+  //     for (var alarm in setAlarms) {
+  //       if (currentTime.hour == alarm.alarmTime.hour &&
+  //           currentTime.minute == alarm.alarmTime.minute &&
+  //           !isAlarmRinging) {
+  //         print("アラームがなります - アラームID: ${alarm.id}");
+  //         print(alarms);
+  //         _playAlarmSound();
+  //         alarm.switchValue = false;
+  //         alarmDataService.saveAlarms(alarms);
+  //         alarmDataService.loadAlarms(alarms, callback);
+  //       }
+  //     }
+  //   });
+  // }
 
   Future<void> _playAlarmSound() async {
     try {
@@ -76,12 +77,6 @@ class AlarmManager {
     }
   }
 
-  void startVibration() async {
-    vibrationTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-      Vibration.vibrate(duration: 500);
-    });
-  }
-
   void stopAlarmSound(String alarmId) async {
     audioPlayer.stop();
     isAlarmRinging = false;
@@ -89,8 +84,15 @@ class AlarmManager {
     print("アラームを停止しました");
   }
 
+  void startVibration() async {
+    vibrationTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      Vibration.vibrate(duration: 500);
+    });
+  }
+
   void stopVibration() {
     vibrationTimer?.cancel();
+    print("バイブレーションがキャンセルされました");
     Vibration.cancel();
   }
 
@@ -162,31 +164,32 @@ class AlarmManager {
     if (payloadValue.startsWith('stop_action:')) {
       String alarmId = payloadValue.split(':').last;
       stopAlarmSound(alarmId);
+      stopVibration();
     }
   }
+  //
+  // @pragma('vm:entry-point')
+  // void setupBackgroundAlarm(List<AlarmCard> alarms) {
+  //
+  //   print(alarms);
+  //   AndroidAlarmManager.periodic(
+  //     const Duration(seconds: 1),
+  //     0,
+  //     (int alarmId) {
+  //       backgroundAlarmCallback(alarms);
+  //     },
+  //     exact: true,
+  //     wakeup: true,
+  //     rescheduleOnReboot: true,
+  //     allowWhileIdle: true,
+  //   );
+  // }
 
-  void setupBackgroundAlarm(List<AlarmCard> alarms) {
-    // final alarmId = alarm.id.hashCode;
-
-    print("っっっs");
-    AndroidAlarmManager.periodic(
-      const Duration(seconds: 1),
-      0,
-      (int alarmId) => _backgroundAlarmCallback(alarmId, alarms),
-      startAt: DateTime.now(),
-      exact: true,
-      wakeup: true,
-      rescheduleOnReboot: true,
-      // alarmClock: true,
-      allowWhileIdle: true,
-    );
-  }
-
-  Future<void> _backgroundAlarmCallback(
-      int alarmId, List<AlarmCard> alarms) async {
-    // final alarmTime = alarms.firstWhere((alarm) => alarm.id.hashCode == alarmId).alarmTime;
+  @pragma('vm:entry-point')
+  Future<void> backgroundAlarmCallback(List<AlarmCard> alarms) async {
     final setAlarms = alarms.where((alarm) => alarm.switchValue).toList();
     final now = DateTime.now();
+    print("ぁぁー");
     for (var alarm in setAlarms) {
       print("${setAlarms}");
       if (now.hour == alarm.alarmTime.hour &&
@@ -194,6 +197,8 @@ class AlarmManager {
         print("実行されます");
         await _playAlarmSound();
         startVibration();
+
+        break;
       }
     }
   }

@@ -10,8 +10,10 @@ import 'package:alarm/alarm.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Alarm.init();
+  await AndroidAlarmManager.initialize();
 
   runApp(const MyApp());
+
 }
 
 class MyApp extends StatelessWidget {
@@ -50,39 +52,20 @@ class AlarmPage extends State<MyHomePage> {
   void initState() {
     super.initState();
     AndroidAlarmManager.initialize();
-    alarmManager.setupBackgroundAlarm(alarms);
-
 
     alarmDataService.loadAlarms(alarms, () {
-      setState(() {});
+      setState(() {
+        print("むむ");
+        for (var alarm in alarms) {
+          print("アラームID: ${alarm.id}");
+          if (alarm.switchValue) {
+            print("へ");
+            // alarmManager.setupBackgroundAlarm(alarms);
+          }
+        }
+      });
     });
-
-    print("むむ");
-    // for (var alarm in alarms) {
-    //   print("アラームID: ${alarm.id}");
-    //   if (alarm.switchValue) {
-    //     print("へ");
-    //     alarmManager.setupBackgroundAlarm(alarms);
-    //   }
-    // }
-    //
-    // alarmDataService.loadAlarms(alarms, () {
-    //   setState(() {
-    //     print("むむ");
-    //     for (var alarm in alarms) {
-    //       print("アラームID: ${alarm.id}");
-    //       if (alarm.switchValue) {
-    //         print("へ");
-    //         alarmManager.setupBackgroundAlarm(alarms);
-    //       }
-    //     }
-    //   });
-    // });
-
-
-    // AlarmManager.startAlarmAndVibration(alarms);
-
-    // setState(() {});
+    // alarmManager.startAlarmTimer(context, alarms, () {});
   }
 
   @override
