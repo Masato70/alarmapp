@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'alarm_card.dart';
-import 'alarm_manager.dart';
 
 class AlarmDataService {
   late SharedPreferences prefs;
 
+  Future<void> initSharedPreferences() async {
+    prefs = await SharedPreferences.getInstance();
+  }
+
   Future<void> loadAlarms(List<AlarmCard> alarms, Function callback) async {
     print("start loadAlarms");
     prefs = await SharedPreferences.getInstance();
-    AlarmManager alarmManager = AlarmManager();
 
     if (alarms != null && alarms.isNotEmpty) {
       sortAlarms(alarms);
-      // alarmManager.setupBackgroundAlarm(alarms);
       callback();
 
       print("alarms != null $alarms");

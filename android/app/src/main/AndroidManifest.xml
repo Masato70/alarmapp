@@ -11,9 +11,11 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 
-
+        <receiver android:name="io.flutter.plugins.androidalarmmanager.AlarmBroadcastReceiver"
+            android:enabled="true"
+            android:exported="false"/>
         <service
-            android:name="io.fluttercommunity.plus.androidalarmmanager.AlarmService"
+            android:name="dev.fluttercommunity.plus.androidalarmmanager.AlarmService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false"/>
         <receiver
@@ -26,12 +28,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name=".NotificationTapReceiver"
-            android:enabled="true"
-            android:exported="false">
         </receiver>
 
 

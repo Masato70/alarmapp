@@ -4,9 +4,10 @@ import 'package:alarm_clock/alarm_data_service.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'alarm_card.dart';
-import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:vibration/vibration.dart';
+
+
 
 class AlarmManager {
   AudioPlayer audioPlayer = AudioPlayer();
@@ -20,7 +21,6 @@ class AlarmManager {
   AlarmManager() {
     _initializeNotifications();
   }
-
 
   void _initializeNotifications() {
     final AndroidInitializationSettings androidInitializationSettings =
@@ -42,28 +42,9 @@ class AlarmManager {
         onDidReceiveNotificationResponse: _handleNotificationAction);
   }
 
-  // Future<void> startAlarmTimer(
-  //     BuildContext context, List<AlarmCard> alarms, Function callback) async {
-  //   alarmTimer = Timer.periodic(Duration(seconds: 1), (timer) {
-  //     final currentTime = TimeOfDay.now();
-  //     final setAlarms = alarms.where((alarm) => alarm.switchValue).toList();
-  //
-  //     for (var alarm in setAlarms) {
-  //       if (currentTime.hour == alarm.alarmTime.hour &&
-  //           currentTime.minute == alarm.alarmTime.minute &&
-  //           !isAlarmRinging) {
-  //         print("アラームがなります - アラームID: ${alarm.id}");
-  //         print(alarms);
-  //         _playAlarmSound();
-  //         alarm.switchValue = false;
-  //         alarmDataService.saveAlarms(alarms);
-  //         alarmDataService.loadAlarms(alarms, callback);
-  //       }
-  //     }
-  //   });
-  // }
+  Future<void> playAlarmSound() async {
+    print("よばれ");
 
-  Future<void> _playAlarmSound() async {
     try {
       await audioPlayer.play(AssetSource("ringtone-126505.mp3"));
       audioPlayer.setReleaseMode(ReleaseMode.loop);
@@ -167,39 +148,50 @@ class AlarmManager {
       stopVibration();
     }
   }
-  //
-  // @pragma('vm:entry-point')
-  // void setupBackgroundAlarm(List<AlarmCard> alarms) {
-  //
-  //   print(alarms);
-  //   AndroidAlarmManager.periodic(
-  //     const Duration(seconds: 1),
-  //     0,
-  //     (int alarmId) {
-  //       backgroundAlarmCallback(alarms);
-  //     },
-  //     exact: true,
-  //     wakeup: true,
-  //     rescheduleOnReboot: true,
-  //     allowWhileIdle: true,
-  //   );
-  // }
 
-  @pragma('vm:entry-point')
-  Future<void> backgroundAlarmCallback(List<AlarmCard> alarms) async {
-    final setAlarms = alarms.where((alarm) => alarm.switchValue).toList();
+
+  void sensunaikedo() async {
+    print("せんすないけど");
+    List<AlarmCard> alarmSet = [];
+    await alarmDataService.initSharedPreferences();
+
+    final aa = await alarmDataService.getAlarmCardsFromSharedPreferences();
+    alarmSet.clear();
+    alarmSet.addAll(aa);
+    final setAlarms = alarmSet.where((alarm) => alarm.switchValue).toList();
+
+
     final now = DateTime.now();
-    print("ぁぁー");
+    print(now);
+    print("ん${alarmSet}");
+    print("ぇ${setAlarms}");
+
     for (var alarm in setAlarms) {
-      print("${setAlarms}");
+      print("for文");
       if (now.hour == alarm.alarmTime.hour &&
           now.minute == alarm.alarmTime.minute) {
         print("実行されます");
-        await _playAlarmSound();
-        startVibration();
-
-        break;
+        await playAlarmSound();
       }
     }
   }
+
+
+  // void sensunaikedo() async {
+  //   print("せんすないけど");
+  //   final setAlarms = alarms.where((alarm) => alarm.switchValue).toList();
+  //   final now = DateTime.now();
+  //   print(now);
+  //   print(alarms);
+  //   print(setAlarms);
+  //
+  //   for (var alarm in setAlarms) {
+  //     print("for文");
+  //     if (now.hour == alarm.alarmTime.hour &&
+  //         now.minute == alarm.alarmTime.minute) {
+  //       print("実行されます");
+  //       await playAlarmSound();
+  //     }
+  //   }
+  // }
 }

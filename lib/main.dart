@@ -5,15 +5,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:alarm_clock/alarm_card.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
-import 'package:alarm/alarm.dart';
+
+void backgroundAlarmCallback() async {
+  print("_backgroundAlarmCallbackよばれた");
+  AlarmManager alarmManager = AlarmManager();
+  alarmManager.sensunaikedo();
+}
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Alarm.init();
-  await AndroidAlarmManager.initialize();
 
   runApp(const MyApp());
 
+  const alarmId = 0;
+  const duration = Duration(seconds: 1);
+  AndroidAlarmManager.periodic(
+    duration,
+    alarmId,
+    backgroundAlarmCallback,
+    exact: true,
+    wakeup: true,
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -54,18 +67,12 @@ class AlarmPage extends State<MyHomePage> {
     AndroidAlarmManager.initialize();
 
     alarmDataService.loadAlarms(alarms, () {
-      setState(() {
-        print("むむ");
-        for (var alarm in alarms) {
-          print("アラームID: ${alarm.id}");
-          if (alarm.switchValue) {
-            print("へ");
-            // alarmManager.setupBackgroundAlarm(alarms);
-          }
-        }
-      });
+      setState(() {});
     });
-    // alarmManager.startAlarmTimer(context, alarms, () {});
+
+    // backgroundAlarmCallback();
+    alarmManager.sensunaikedo();
+
   }
 
   @override
