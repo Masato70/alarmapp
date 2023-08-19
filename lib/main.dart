@@ -19,13 +19,15 @@ void main() async {
   runApp(const MyApp());
 
   const alarmId = 0;
-  const duration = Duration(seconds: 1);
+  const duration = Duration(seconds: 10);
   AndroidAlarmManager.periodic(
     duration,
     alarmId,
     backgroundAlarmCallback,
     exact: true,
     wakeup: true,
+    allowWhileIdle: true,
+    rescheduleOnReboot: true,
   );
 }
 

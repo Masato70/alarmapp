@@ -61,7 +61,7 @@ class AlarmManager {
   void stopAlarmSound(String alarmId) async {
     audioPlayer.stop();
     isAlarmRinging = false;
-
+    print(alarmId);
     print("アラームを停止しました");
   }
 
@@ -149,22 +149,24 @@ class AlarmManager {
     }
   }
 
-
   void sensunaikedo() async {
     print("せんすないけど");
     List<AlarmCard> alarmSet = [];
     await alarmDataService.initSharedPreferences();
 
+    print("更新前のalarmSet: ${alarmSet}");
     final aa = await alarmDataService.getAlarmCardsFromSharedPreferences();
+    print("お試しaa: ${aa}");
     alarmSet.clear();
     alarmSet.addAll(aa);
-    final setAlarms = alarmSet.where((alarm) => alarm.switchValue).toList();
-
+    // final setAlarms = alarmSet.where((alarm) => alarm.switchValue).toList();
+    List<AlarmCard> setAlarms = alarmSet.where((alarm) => alarm.switchValue).toList(); // 更新する部分を追加
 
     final now = DateTime.now();
-    print(now);
-    print("ん${alarmSet}");
-    print("ぇ${setAlarms}");
+    print("現在時刻 ${now}");
+    print("更新後のalarmSet: ${alarmSet}");
+    print("有効なアラーム ${setAlarms}");
+
 
     for (var alarm in setAlarms) {
       print("for文");

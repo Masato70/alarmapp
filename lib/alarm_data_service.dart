@@ -7,6 +7,8 @@ class AlarmDataService {
 
   Future<void> initSharedPreferences() async {
     prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
+    print("prefs 初期化");
   }
 
   Future<void> loadAlarms(List<AlarmCard> alarms, Function callback) async {
@@ -32,6 +34,7 @@ class AlarmDataService {
   }
 
   Future<List<AlarmCard>> getAlarmCardsFromSharedPreferences() async {
+    print("ふ");
     final getCardId = prefs.getStringList("cardID");
     final getIsParent = prefs.getStringList("isParent");
     final getChildId = prefs.getStringList("childId");
@@ -64,7 +67,6 @@ class AlarmDataService {
 
       return alarmCards;
     }
-    // デフォルトの空リストを返す
     return [];
   }
 
@@ -95,6 +97,8 @@ class AlarmDataService {
     await prefs.setStringList('alarmTime', alarmTime);
     await prefs.setStringList('switchValues', switchValues);
     // await prefs.setStringList('weekdaysValues', weekdaysValuesJson);
+    final getAlarms = prefs.getStringList("switchValues");
+    print(getAlarms);
 
     print("saveAlarms Finish");
   }
