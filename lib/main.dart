@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:alarm_clock/alarm_card.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+List<AlarmCard> alarms = [];
 
 void backgroundAlarmCallback() async {
   print("_backgroundAlarmCallbackよばれた");
@@ -15,7 +16,6 @@ void backgroundAlarmCallback() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   runApp(const MyApp());
 
   const alarmId = 0;
@@ -59,7 +59,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class AlarmPage extends State<MyHomePage> {
-  List<AlarmCard> alarms = [];
   AlarmDataService alarmDataService = AlarmDataService();
   AlarmManager alarmManager = AlarmManager();
 
@@ -68,13 +67,12 @@ class AlarmPage extends State<MyHomePage> {
     super.initState();
     AndroidAlarmManager.initialize();
 
-    alarmDataService.loadAlarms(alarms, () {
+    alarmDataService.loadAlarms(() {
       setState(() {});
     });
 
     // backgroundAlarmCallback();
     alarmManager.sensunaikedo();
-
   }
 
   @override
@@ -117,7 +115,7 @@ class AlarmPage extends State<MyHomePage> {
                     alarm.id == parentAlarms.id ||
                     alarm.childId == parentAlarms.id);
               });
-              alarmDataService.saveAlarms(alarms);
+              alarmDataService.saveAlarms();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text("削除しました")),
               );
@@ -177,7 +175,7 @@ class AlarmPage extends State<MyHomePage> {
                                           (alarm) => alarm.switchValue = false);
                                 }
                               });
-                              alarmDataService.saveAlarms(alarms);
+                              alarmDataService.saveAlarms();
                             },
                           ),
                         )
@@ -190,7 +188,6 @@ class AlarmPage extends State<MyHomePage> {
                             timePickerService.childTimePicker(
                               context,
                               parentIndex,
-                              alarms,
                               () {
                                 setState(() {});
                               },
@@ -227,7 +224,7 @@ class AlarmPage extends State<MyHomePage> {
                                   alarms.removeWhere(
                                       (alarm) => alarm.id == childAlarm.id);
                                 });
-                                alarmDataService.saveAlarms(alarms);
+                                alarmDataService.saveAlarms();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(content: Text("削除しました")),
                                 );
@@ -257,7 +254,7 @@ class AlarmPage extends State<MyHomePage> {
                                           childAlarm.switchValue = value;
                                         });
                                       }
-                                      alarmDataService.saveAlarms(alarms);
+                                      alarmDataService.saveAlarms();
                                     },
                                   ),
                                 ],
@@ -276,7 +273,7 @@ class AlarmPage extends State<MyHomePage> {
           alignment: Alignment.bottomCenter,
           child: FloatingActionButton.large(
             onPressed: () {
-              timePickerService.parentTimePicker(context, alarms, () {
+              timePickerService.parentTimePicker(context, () {
                 setState(() {});
               });
             },

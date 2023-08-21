@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'alarm_card.dart';
+import 'package:alarm_clock/main.dart';
+
 
 class AlarmDataService {
   late SharedPreferences prefs;
@@ -11,12 +13,12 @@ class AlarmDataService {
     print("prefs 初期化");
   }
 
-  Future<void> loadAlarms(List<AlarmCard> alarms, Function callback) async {
+  Future<void> loadAlarms(Function callback) async {
     print("start loadAlarms");
     prefs = await SharedPreferences.getInstance();
 
     if (alarms != null && alarms.isNotEmpty) {
-      sortAlarms(alarms);
+      sortAlarms();
       callback();
 
       print("alarms != null $alarms");
@@ -24,7 +26,7 @@ class AlarmDataService {
       //呼び出される時はアプリを開いた時のみ
       print("alarms null");
       final alarmCards = await getAlarmCardsFromSharedPreferences();
-      sortAlarms(alarmCards);
+      sortAlarms();
       alarms.clear();
       alarms.addAll(alarmCards);
       print(alarms);
@@ -70,7 +72,7 @@ class AlarmDataService {
     return [];
   }
 
-  void sortAlarms(List<AlarmCard> alarms) {
+  void sortAlarms() {
     alarms.sort((a, b) {
       if (a.alarmTime.hour == b.alarmTime.hour) {
         return a.alarmTime.minute.compareTo(b.alarmTime.minute);
@@ -79,7 +81,7 @@ class AlarmDataService {
     });
   }
 
-  Future<void> saveAlarms(List<AlarmCard> alarms) async {
+  Future<void> saveAlarms() async {
     print("start saveAlarms");
     prefs = await SharedPreferences.getInstance();
 

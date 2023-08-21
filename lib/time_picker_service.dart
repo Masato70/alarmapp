@@ -2,12 +2,13 @@ import 'package:alarm_clock/alarm_data_service.dart';
 import 'package:flutter/material.dart';
 import 'alarm_card.dart';
 import 'package:uuid/uuid.dart';
+import 'package:alarm_clock/main.dart';
 
 class TimePickerService {
   AlarmDataService alarmDataService = AlarmDataService();
 
   Future<void> parentTimePicker(
-      BuildContext context, List<AlarmCard> alarms, Function callback) async {
+      BuildContext context, Function callback) async {
     final TimeOfDay? timePicked = await showTimePicker(
         context: context, initialTime: TimeOfDay(hour: 6, minute: 0));
 
@@ -30,13 +31,13 @@ class TimePickerService {
       alarms.add(newAlarmCard);
       print('parentTimePicker alarms: $alarms');
 
-      await alarmDataService.saveAlarms(alarms);
-      await alarmDataService.loadAlarms(alarms, callback);
+      await alarmDataService.saveAlarms();
+      await alarmDataService.loadAlarms(callback);
     }
   }
 
   Future<void> childTimePicker(BuildContext context, int cardIndex,
-      List<AlarmCard> alarms, Function callback) async {
+      Function callback) async {
     final TimeOfDay? timePicked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: 6, minute: 0),
@@ -70,8 +71,8 @@ class TimePickerService {
       alarms.add(newAlarmCard);
       print('childTimePicker alarms: $alarms');
 
-      await alarmDataService.saveAlarms(alarms);
-      await alarmDataService.loadAlarms(alarms, callback);
+      await alarmDataService.saveAlarms();
+      await alarmDataService.loadAlarms(callback);
     }
   }
 }
