@@ -10,7 +10,9 @@ List<AlarmCard> alarms = [];
 void backgroundAlarmCallback() async {
   print("_backgroundAlarmCallbackよばれた");
   AlarmManager alarmManager = AlarmManager();
-  alarmManager.sensunaikedo();
+  if (!alarmManager.isAlarmRinging) {
+    alarmManager.sensunaikedo();
+  }
 }
 
 
