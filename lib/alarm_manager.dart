@@ -1,22 +1,20 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:alarm_clock/alarm_data_service.dart';
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'alarm_card.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:vibration/vibration.dart';
 import 'package:alarm_clock/main.dart';
 
-
 class AlarmManager {
   AudioPlayer audioPlayer = AudioPlayer();
   bool isAlarmRinging = false;
-  Timer? alarmTimer;
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
   AlarmDataService alarmDataService = AlarmDataService();
   Timer? vibrationTimer;
+  Timer? alarmAndVibrationTimer;
 
   AlarmManager() {
     _initializeNotifications();
@@ -48,68 +46,70 @@ class AlarmManager {
     if (Platform.isIOS || Platform.isMacOS) {
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin>()
+              IOSFlutterLocalNotificationsPlugin>()
           ?.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+            alert: true,
+            badge: true,
+            sound: true,
+          );
       await flutterLocalNotificationsPlugin
           .resolvePlatformSpecificImplementation<
-          MacOSFlutterLocalNotificationsPlugin>()
+              MacOSFlutterLocalNotificationsPlugin>()
           ?.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+            alert: true,
+            badge: true,
+            sound: true,
+          );
     } else if (Platform.isAndroid) {
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
-      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+          flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
       await androidImplementation?.requestPermission();
     }
   }
 
-  Future<void> playAlarmSound(String alarmId) async {
-    print("よばれ");
-    print(alarmId);
-    print(alarms);
-
+  Future<void> playAlarm(String alarmId) async {
     try {
-      _playAudio();
-      isAlarmRinging = true;
       _showNotification();
-      startVibration();
-      print("アラーム音が再生しました");
-      final AlarmCard alarmToOf = alarms.firstWhere((alarm) => alarm.id == alarmId);
-      print("ちわす${alarmToOf}");
-      alarmToOf.switchValue = false;
-      print("ふふふ${alarms}");
-      print("へへへ${alarms}");
-      await alarmDataService.saveAlarms();
-      // await alarmDataService.loadAlarms(() {});
-      print("イチレン");
+
+      if (!isAlarmRinging) {
+        isAlarmRinging = true;
+
+        startAudio();
+        startVibration();
+
+        print("アラーム音が再生しました");
+
+        //UI更新
+        final AlarmCard alarmToOf = alarms.firstWhere((alarm) => alarm.id == alarmId);
+        alarmToOf.switchValue = false;
+        await alarmDataService.saveAlarms();
+        await alarmDataService.loadAlarms(() {});
+      }
     } catch (e) {
       print("アラーム音の再生中にエラーが発生しました $e");
       isAlarmRinging = false;
     }
   }
 
-  Future<void> _playAudio() async {
+  Future<void> startAudio() async {
     try {
       await audioPlayer.play(AssetSource("ringtone-126505.mp3"));
       audioPlayer.setReleaseMode(ReleaseMode.loop);
     } catch (e) {
       print("アラーム音の再生中にエラーが発生しました $e");
-      rethrow; // エラーを再スローして呼び出し元に伝える
     }
   }
 
   void stopAlarmSound() {
     print("stopAlarmSound 開始");
-    audioPlayer.stop();
-    isAlarmRinging = false;
-    print("アラームを停止しました");
+    try {
+      audioPlayer?.stop();
+      isAlarmRinging = false;
+      print("アラームを停止しました");
+    } catch (e) {
+      print("アラームストップ失敗 ${e}");
+    }
   }
 
   void startVibration() async {
@@ -119,12 +119,15 @@ class AlarmManager {
   }
 
   void stopVibration() {
-    print("stopVibration 開始");
-    vibrationTimer?.cancel();
-    Vibration.cancel();
-    print("バイブレーションがキャンセルされました");
+    try {
+      print("stopVibration 開始");
+      vibrationTimer?.cancel();
+      Vibration.cancel();
+      print("バイブレーションがキャンセルされました");
+    } catch (e) {
+      print("バイブレーションキャンセル失敗${e}");
+    }
   }
-
 
   Future<void> _showNotification() async {
     const AndroidNotificationDetails androidNotificationDetails =
@@ -164,33 +167,30 @@ class AlarmManager {
     print("通知がタップされました。Payload: $payloadValue");
 
     if (payloadValue.startsWith('stop_action:')) {
+      print("ストップ");
       stopAlarmSound();
       stopVibration();
     }
   }
 
+  void sensunaikedo() async {
+    await alarmDataService.initSharedPreferences();
 
-  void sensunaikedo()  async{
-    print("せんすないけど");
-
-    alarmDataService.initSharedPreferences();
     print("更新前のalarmSet: ${alarms}");
     alarms.clear();
-    alarms.addAll( await alarmDataService.getAlarmCardsFromSharedPreferences());
+    alarms.addAll(await alarmDataService.getAlarmCardsFromSharedPreferences());
     List<AlarmCard> setAlarms = alarms.where((alarm) => alarm.switchValue).toList();
     final now = DateTime.now();
-    print("現在時刻 ${now}");
 
+    print("現在時刻 ${now}");
     print("更新後のalarmSet: ${alarms}");
     print("有効なアラーム ${setAlarms}");
 
     for (var alarm in setAlarms) {
-      print("for文");
       if (now.hour == alarm.alarmTime.hour && now.minute == alarm.alarmTime.minute) {
         print("実行されます");
-        playAlarmSound(alarm.id);
+        playAlarm(alarm.id);
       }
     }
   }
-
 }
