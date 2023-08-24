@@ -11,7 +11,7 @@ void backgroundAlarmCallback() async {
   print("_backgroundAlarmCallbackよばれた");
   AlarmManager alarmManager = AlarmManager();
   if (!alarmManager.isAlarmRinging) {
-    alarmManager.sensunaikedo();
+    alarmManager.checkAndTriggerAlarms();
   }
 }
 
@@ -74,7 +74,7 @@ class AlarmPage extends State<MyHomePage> {
     });
 
     // backgroundAlarmCallback();
-    alarmManager.sensunaikedo();
+    alarmManager.checkAndTriggerAlarms();
   }
 
   @override

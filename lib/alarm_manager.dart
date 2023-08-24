@@ -85,6 +85,9 @@ class AlarmManager {
         alarmToOf.switchValue = false;
         await alarmDataService.saveAlarms();
         await alarmDataService.loadAlarms(() {});
+
+        stopAlarmSound();
+        stopVibration();
       }
     } catch (e) {
       print("アラーム音の再生中にエラーが発生しました $e");
@@ -92,19 +95,25 @@ class AlarmManager {
     }
   }
 
-  Future<void> startAudio() async {
+  @override
+  void dispose() {
+    audioPlayer.dispose(); // アプリ終了時にオーディオプレーヤーを解放
+  }
+
+  void startAudio()  {
     try {
-      await audioPlayer.play(AssetSource("ringtone-126505.mp3"));
+       audioPlayer.play(AssetSource("ringtone-126505.mp3"));
       audioPlayer.setReleaseMode(ReleaseMode.loop);
+      print("アラームスタート");
     } catch (e) {
       print("アラーム音の再生中にエラーが発生しました $e");
     }
   }
 
-  void stopAlarmSound() {
+  Future<void> stopAlarmSound() async{
     print("stopAlarmSound 開始");
     try {
-      audioPlayer?.stop();
+      await audioPlayer.stop();
       isAlarmRinging = false;
       print("アラームを停止しました");
     } catch (e) {
@@ -112,17 +121,18 @@ class AlarmManager {
     }
   }
 
-  void startVibration() async {
+  Future<void> startVibration() async {
     vibrationTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       Vibration.vibrate(duration: 500);
+      print("バイブレーションスタート");
     });
   }
 
-  void stopVibration() {
+  Future<void> stopVibration() async{
     try {
       print("stopVibration 開始");
-      vibrationTimer?.cancel();
-      Vibration.cancel();
+       vibrationTimer?.cancel();
+      await Vibration.cancel();
       print("バイブレーションがキャンセルされました");
     } catch (e) {
       print("バイブレーションキャンセル失敗${e}");
@@ -173,7 +183,7 @@ class AlarmManager {
     }
   }
 
-  void sensunaikedo() async {
+  Future<void> checkAndTriggerAlarms() async {
     await alarmDataService.initSharedPreferences();
 
     print("更新前のalarmSet: ${alarms}");
