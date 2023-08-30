@@ -1,3 +1,6 @@
+import 'dart:isolate';
+import 'dart:ui';
+
 import 'package:alarm_clock/alarm_data_service.dart';
 import 'package:alarm_clock/alarm_manager.dart';
 import 'package:alarm_clock/time_picker_service.dart';
@@ -5,16 +8,27 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:alarm_clock/alarm_card.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+
 List<AlarmCard> alarms = [];
 
+@pragma('vm:entry-point')
 void backgroundAlarmCallback() async {
   print("_backgroundAlarmCallbackよばれた");
   AlarmManager alarmManager = AlarmManager();
   if (!alarmManager.isAlarmRinging) {
+
+    final String portName = 'myUniquePortName';
+    final ReceivePort port = ReceivePort();
+    IsolateNameServer.registerPortWithName(port.sendPort, portName);
+    port.listen((message) async {
+      if (message == "stop") {
+        alarmManager.stopAlarmSound();
+      }
+    });
+
     alarmManager.checkAndTriggerAlarms();
   }
 }
-
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

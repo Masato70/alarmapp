@@ -1,20 +1,19 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 import 'package:alarm_clock/alarm_data_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'alarm_card.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:vibration/vibration.dart';
 import 'package:alarm_clock/main.dart';
+import 'package:vibration/vibration.dart';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 
 class AlarmManager {
-  AudioPlayer audioPlayer = AudioPlayer();
   bool isAlarmRinging = false;
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
   AlarmDataService alarmDataService = AlarmDataService();
   Timer? vibrationTimer;
-  Timer? alarmAndVibrationTimer;
 
   AlarmManager() {
     _initializeNotifications();
@@ -75,13 +74,14 @@ class AlarmManager {
       if (!isAlarmRinging) {
         isAlarmRinging = true;
 
-        startAudio();
+        startAlarmSound();
         startVibration();
 
         print("アラーム音が再生しました");
 
-        //UI更新
-        final AlarmCard alarmToOf = alarms.firstWhere((alarm) => alarm.id == alarmId);
+        // UI更新
+        final AlarmCard alarmToOf =
+            alarms.firstWhere((alarm) => alarm.id == alarmId);
         alarmToOf.switchValue = false;
         await alarmDataService.saveAlarms();
         await alarmDataService.loadAlarms(() {});
@@ -95,48 +95,30 @@ class AlarmManager {
     }
   }
 
-  @override
-  void dispose() {
-    audioPlayer.dispose(); // アプリ終了時にオーディオプレーヤーを解放
+
+
+  void startAlarmSound() {
+    // audioPlayer.play(AssetSource("ringtone-126505.mp3"));
+    FlutterRingtonePlayer.playAlarm(looping: true);
+    print("アラームを再生中");
   }
 
-  void startAudio()  {
-    try {
-       audioPlayer.play(AssetSource("ringtone-126505.mp3"));
-      audioPlayer.setReleaseMode(ReleaseMode.loop);
-      print("アラームスタート");
-    } catch (e) {
-      print("アラーム音の再生中にエラーが発生しました $e");
-    }
+  void stopAlarmSound() async {
+    FlutterRingtonePlayer.stop();
+    print("アラームを停止");
   }
 
-  Future<void> stopAlarmSound() async{
-    print("stopAlarmSound 開始");
-    try {
-      await audioPlayer.stop();
-      isAlarmRinging = false;
-      print("アラームを停止しました");
-    } catch (e) {
-      print("アラームストップ失敗 ${e}");
-    }
-  }
-
-  Future<void> startVibration() async {
+  void startVibration() async {
     vibrationTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       Vibration.vibrate(duration: 500);
       print("バイブレーションスタート");
     });
   }
 
-  Future<void> stopVibration() async{
-    try {
-      print("stopVibration 開始");
-       vibrationTimer?.cancel();
-      await Vibration.cancel();
-      print("バイブレーションがキャンセルされました");
-    } catch (e) {
-      print("バイブレーションキャンセル失敗${e}");
-    }
+  void stopVibration() async {
+    print("stopVibration 開始");
+    await Vibration.cancel();
+    print("バイブレーションがキャンセルされました");
   }
 
   Future<void> _showNotification() async {
@@ -176,8 +158,12 @@ class AlarmManager {
     String payloadValue = payload?.payload ?? '';
     print("通知がタップされました。Payload: $payloadValue");
 
+    IsolateNameServer.lookupPortByName("myUniquePortName")?.send("stop");
+    IsolateNameServer.removePortNameMapping("myUniquePortName");
+
     if (payloadValue.startsWith('stop_action:')) {
       print("ストップ");
+      print(payload);
       stopAlarmSound();
       stopVibration();
     }
@@ -189,7 +175,8 @@ class AlarmManager {
     print("更新前のalarmSet: ${alarms}");
     alarms.clear();
     alarms.addAll(await alarmDataService.getAlarmCardsFromSharedPreferences());
-    List<AlarmCard> setAlarms = alarms.where((alarm) => alarm.switchValue).toList();
+    List<AlarmCard> setAlarms =
+        alarms.where((alarm) => alarm.switchValue).toList();
     final now = DateTime.now();
 
     print("現在時刻 ${now}");
@@ -197,9 +184,11 @@ class AlarmManager {
     print("有効なアラーム ${setAlarms}");
 
     for (var alarm in setAlarms) {
-      if (now.hour == alarm.alarmTime.hour && now.minute == alarm.alarmTime.minute) {
+      if (now.hour == alarm.alarmTime.hour &&
+          now.minute == alarm.alarmTime.minute) {
         print("実行されます");
         playAlarm(alarm.id);
+        _initializeNotifications();
       }
     }
   }
