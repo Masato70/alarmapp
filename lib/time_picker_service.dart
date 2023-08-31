@@ -7,8 +7,7 @@ import 'package:alarm_clock/main.dart';
 class TimePickerService {
   AlarmDataService alarmDataService = AlarmDataService();
 
-  Future<void> parentTimePicker(
-      BuildContext context, Function callback) async {
+  Future<void> parentTimePicker(BuildContext context, Function callback) async {
     final TimeOfDay? timePicked = await showTimePicker(
         context: context, initialTime: TimeOfDay(hour: 6, minute: 0));
 
@@ -36,16 +35,15 @@ class TimePickerService {
     }
   }
 
-  Future<void> childTimePicker(BuildContext context, int cardIndex,
-      Function callback) async {
+  Future<void> childTimePicker(
+      BuildContext context, int cardIndex, Function callback) async {
     final TimeOfDay? timePicked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay(hour: 6, minute: 0),
     );
 
     if (timePicked != null) {
-      final List<AlarmCard> parentAlarms =
-          alarms.where((alarm) => alarm.isParent).toList();
+      final List<AlarmCard> parentAlarms = alarms.where((alarm) => alarm.isParent).toList();
       final AlarmCard selectedCard = parentAlarms[cardIndex];
       final parentId = selectedCard.id;
 

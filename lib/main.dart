@@ -1,6 +1,5 @@
 import 'dart:isolate';
 import 'dart:ui';
-
 import 'package:alarm_clock/alarm_data_service.dart';
 import 'package:alarm_clock/alarm_manager.dart';
 import 'package:alarm_clock/time_picker_service.dart';
@@ -12,20 +11,18 @@ import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 List<AlarmCard> alarms = [];
 
 @pragma('vm:entry-point')
-void backgroundAlarmCallback() async {
-  print("_backgroundAlarmCallbackよばれた");
+void _backgroundAlarmCallback() async {
+  print("call _backgroundAlarmCallback");
   AlarmManager alarmManager = AlarmManager();
   if (!alarmManager.isAlarmRinging) {
-
     final String portName = 'myUniquePortName';
     final ReceivePort port = ReceivePort();
     IsolateNameServer.registerPortWithName(port.sendPort, portName);
     port.listen((message) async {
       if (message == "stop") {
-        alarmManager.stopAlarmSound();
+        alarmManager.deactivateAlerts();
       }
     });
-
     alarmManager.checkAndTriggerAlarms();
   }
 }
@@ -39,7 +36,7 @@ void main() async {
   AndroidAlarmManager.periodic(
     duration,
     alarmId,
-    backgroundAlarmCallback,
+    _backgroundAlarmCallback,
     exact: true,
     wakeup: true,
     allowWhileIdle: true,
@@ -87,7 +84,6 @@ class AlarmPage extends State<MyHomePage> {
       setState(() {});
     });
 
-    // backgroundAlarmCallback();
     alarmManager.checkAndTriggerAlarms();
   }
 

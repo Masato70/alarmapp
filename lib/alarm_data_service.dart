@@ -10,7 +10,6 @@ class AlarmDataService {
   Future<void> initSharedPreferences() async {
     prefs = await SharedPreferences.getInstance();
     await prefs.reload();
-    print("prefs 初期化");
   }
 
   Future<void> loadAlarms(Function callback) async {
@@ -36,7 +35,6 @@ class AlarmDataService {
   }
 
   Future<List<AlarmCard>> getAlarmCardsFromSharedPreferences() async {
-    print("ふ");
     final getCardId = prefs.getStringList("cardID");
     final getIsParent = prefs.getStringList("isParent");
     final getChildId = prefs.getStringList("childId");
