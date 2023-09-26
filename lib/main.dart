@@ -18,12 +18,16 @@ void _backgroundAlarmCallback() async {
     final String portName = 'myUniquePortName';
     final ReceivePort port = ReceivePort();
     IsolateNameServer.registerPortWithName(port.sendPort, portName);
+
     port.listen((message) async {
       if (message == "stop") {
-        alarmManager.deactivateAlerts();
+        print("なか");
+        await alarmManager.deactivateAlerts();
+        port.close();
+        IsolateNameServer.removePortNameMapping(portName);
       }
     });
-    alarmManager.checkAndTriggerAlarms();
+    await alarmManager.checkAndTriggerAlarms();
   }
 }
 
@@ -32,7 +36,7 @@ void main() async {
   runApp(const MyApp());
 
   const alarmId = 0;
-  const duration = Duration(seconds: 10);
+  const duration = const Duration(minutes: 1);
   AndroidAlarmManager.periodic(
     duration,
     alarmId,
@@ -83,8 +87,7 @@ class AlarmPage extends State<MyHomePage> {
     alarmDataService.loadAlarms(() {
       setState(() {});
     });
-
-    alarmManager.checkAndTriggerAlarms();
+    // alarmManager.checkAndTriggerAlarms();
   }
 
   @override

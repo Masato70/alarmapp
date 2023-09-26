@@ -15,10 +15,10 @@ class AlarmManager {
   AlarmDataService alarmDataService = AlarmDataService();
   Timer? vibrationTimer;
   AlarmManager() {
-    _initializeNotifications();
+    initializeNotifications();
   }
 
-  void _initializeNotifications() {
+  void initializeNotifications() {
     final AndroidInitializationSettings androidInitializationSettings =
         AndroidInitializationSettings('tokei_clock_icon_2066');
 
@@ -78,9 +78,6 @@ class AlarmManager {
         alarmToOf.switchValue = false;
         await alarmDataService.saveAlarms();
         await alarmDataService.loadAlarms(() {});
-        await alarmDataService.initSharedPreferences();
-        alarms.clear();
-        alarms.addAll(await alarmDataService.getAlarmCardsFromSharedPreferences());
         print("あらーむす　${alarms}");
       }
     } catch (e) {
@@ -95,10 +92,10 @@ class AlarmManager {
     _startVibration();
   }
 
-  void deactivateAlerts() {
+  Future<void> deactivateAlerts() async {
     print("deactivateAlerts start");
-    stopAlarmSound();
-    stopVibration();
+    await stopAlarmSound();
+    await stopVibration();
   }
 
   void _startAlarmSound() {
@@ -106,22 +103,27 @@ class AlarmManager {
     print("アラームを再生中");
   }
 
-  void stopAlarmSound() async {
-    FlutterRingtonePlayer.stop();
+  Future<void> stopAlarmSound() async {
+    await FlutterRingtonePlayer.stop();
     print("アラームを停止");
   }
 
   void _startVibration() async {
+    print("スタートバイブレーションです");
     vibrationTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       Vibration.vibrate(duration: 500);
       print("バイブレーションスタート");
     });
   }
 
-  void stopVibration() async {
-    vibrationTimer?.cancel();
-    Vibration.cancel();
-    print("バイブレーションを停止");
+  Future<void> stopVibration() async {
+    try {
+      await Vibration.cancel();
+      vibrationTimer?.cancel();
+      print("バイブレーションを停止");
+    } catch (e) {
+      print("バイブレーション停止中にエラーが発生しました: $e");
+    }
   }
 
   Future<void> _showNotification() async {
