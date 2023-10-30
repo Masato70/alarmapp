@@ -66,7 +66,7 @@ class AlarmManager {
     }
   }
 
-  Future<void> playAlarm(String alarmId) async {
+  Future<void> playAlarm() async {
     try {
       if (!isAlarmRinging) {
         isAlarmRinging = true;
@@ -74,8 +74,8 @@ class AlarmManager {
         _activateAlerts();
         print("アラーム音が再生しました");
         // UI更新
-        final AlarmCard alarmToOf = alarms.firstWhere((alarm) => alarm.id == alarmId);
-        alarmToOf.switchValue = false;
+        // final AlarmCard alarmToOf = alarms.firstWhere((alarm) => alarm.id == alarmId);
+        // alarmToOf.switchValue = false;
         await alarmDataService.saveAlarms();
         await alarmDataService.loadAlarms(() {});
         print("あらーむす　${alarms}");
@@ -165,25 +165,7 @@ class AlarmManager {
 
     if (payloadValue.startsWith('stop_action:')) {
       print("ストップ");
-      IsolateNameServer.lookupPortByName("myUniquePortName")?.send("stop");
-      IsolateNameServer.removePortNameMapping("myUniquePortName");
-    }
-  }
-
-  Future<void> checkAndTriggerAlarms() async {
-    await alarmDataService.initSharedPreferences();
-    final now = DateTime.now();
-
-    print("更新前のalarmSet: ${alarms}");
-    alarms.clear();
-    alarms.addAll(await alarmDataService.getAlarmCardsFromSharedPreferences());
-    List<AlarmCard> switchOnAlarms = alarms.where((alarm) => alarm.switchValue).toList();
-
-    for (var alarm in switchOnAlarms) {
-      if (now.hour == alarm.alarmTime.hour && now.minute == alarm.alarmTime.minute) {
-        print("実行されます");
-        playAlarm(alarm.id);
-      }
+      await deactivateAlerts();
     }
   }
 }

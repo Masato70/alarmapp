@@ -6,46 +6,13 @@ import 'package:alarm_clock/time_picker_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:alarm_clock/alarm_card.dart';
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:flutter/services.dart';
 
 List<AlarmCard> alarms = [];
-
-@pragma('vm:entry-point')
-void _backgroundAlarmCallback() async {
-  print("call _backgroundAlarmCallback");
-  AlarmManager alarmManager = AlarmManager();
-  if (!alarmManager.isAlarmRinging) {
-    final String portName = 'myUniquePortName';
-    final ReceivePort port = ReceivePort();
-    IsolateNameServer.registerPortWithName(port.sendPort, portName);
-
-    port.listen((message) async {
-      if (message == "stop") {
-        print("なか");
-        await alarmManager.deactivateAlerts();
-        port.close();
-        IsolateNameServer.removePortNameMapping(portName);
-      }
-    });
-    await alarmManager.checkAndTriggerAlarms();
-  }
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
-
-  const alarmId = 0;
-  const duration = const Duration(minutes: 1);
-  AndroidAlarmManager.periodic(
-    duration,
-    alarmId,
-    _backgroundAlarmCallback,
-    exact: true,
-    wakeup: true,
-    allowWhileIdle: true,
-    rescheduleOnReboot: true,
-  );
 }
 
 class MyApp extends StatelessWidget {
@@ -79,13 +46,21 @@ class AlarmPage extends State<MyHomePage> {
   AlarmDataService alarmDataService = AlarmDataService();
   AlarmManager alarmManager = AlarmManager();
 
+  static const channel = const MethodChannel('com.example.app/alarm');
+
   @override
   void initState() {
     super.initState();
-    AndroidAlarmManager.initialize();
-
     alarmDataService.loadAlarms(() {
       setState(() {});
+    });
+
+    channel.setMethodCallHandler((MethodCall call) async {
+      switch (call.method) {
+        case 'triggerAlarm':
+          alarmManager.playAlarm();
+          break;
+      }
     });
     // alarmManager.checkAndTriggerAlarms();
   }

@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.SET_ALARM"/>
 
     <application
         android:label="alarm_clock"
@@ -32,6 +33,15 @@
             </intent-filter>
         </receiver>
 
+<!--        <receiver android:name=".AlarmReceiver" />-->
+
+        <receiver android:name=".AlarmReceiver" android:enabled="true" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
+
 
 
         <activity
@@ -56,6 +66,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="com.example.alarmclock.alarm_clock.STOP_ALARM" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
