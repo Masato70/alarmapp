@@ -48,6 +48,9 @@ dependencies:
   uuid: ^3.0.7
   vibration: ^1.8.1
   flutter_ringtone_player: ^3.2.0
+  permission_handler: ^6.1.1
+
+
 
 dev_dependencies:
   shared_preferences: ^2.1.1

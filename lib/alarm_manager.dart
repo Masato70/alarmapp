@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:ui';
 import 'package:alarm_clock/alarm_data_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'alarm_card.dart';
 import 'package:alarm_clock/main.dart';
 import 'package:vibration/vibration.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
@@ -14,25 +12,18 @@ class AlarmManager {
       FlutterLocalNotificationsPlugin();
   AlarmDataService alarmDataService = AlarmDataService();
   Timer? vibrationTimer;
+
   AlarmManager() {
     initializeNotifications();
   }
 
   void initializeNotifications() {
     final AndroidInitializationSettings androidInitializationSettings =
-        AndroidInitializationSettings('tokei_clock_icon_2066');
-
-    final DarwinInitializationSettings darwinInitializationSettings =
-        DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
-    );
+        AndroidInitializationSettings('icon_115930_256');
 
     final InitializationSettings initializationSettings =
         InitializationSettings(
-            android: androidInitializationSettings,
-            iOS: darwinInitializationSettings);
+            android: androidInitializationSettings);
 
     flutterLocalNotificationsPlugin.initialize(initializationSettings,
         onDidReceiveNotificationResponse: _handleNotificationAction);
@@ -40,28 +31,10 @@ class AlarmManager {
 
   Future<void> requestPermissions() async {
     print("通知のパーミッションを要求する直後");
-
-    if (Platform.isIOS || Platform.isMacOS) {
-      await flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin>()
-          ?.requestPermissions(
-            alert: true,
-            badge: true,
-            sound: true,
-          );
-      await flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              MacOSFlutterLocalNotificationsPlugin>()
-          ?.requestPermissions(
-            alert: true,
-            badge: true,
-            sound: true,
-          );
-    } else if (Platform.isAndroid) {
+    if (Platform.isAndroid) {
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
-          flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>();
+      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
       await androidImplementation?.requestPermission();
     }
   }
@@ -76,8 +49,8 @@ class AlarmManager {
         // UI更新
         // final AlarmCard alarmToOf = alarms.firstWhere((alarm) => alarm.id == alarmId);
         // alarmToOf.switchValue = false;
-        await alarmDataService.saveAlarms();
-        await alarmDataService.loadAlarms(() {});
+        // await alarmDataService.saveAlarms();
+        // await alarmDataService.loadAlarms(() {});
         print("あらーむす　${alarms}");
       }
     } catch (e) {
@@ -127,6 +100,7 @@ class AlarmManager {
   }
 
   Future<void> _showNotification() async {
+    print("_showNotification Start 0");
     const AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
       'your channel id',
@@ -134,22 +108,17 @@ class AlarmManager {
       channelDescription: 'your channel description',
       importance: Importance.max,
       priority: Priority.high,
-      icon: "tokei_clock_icon_2066",
+      icon: "icon_115930_256",
       fullScreenIntent: true,
       enableVibration: true,
       ticker: 'ticker',
     );
-
-    const String darwinNotificationCategoryPlain = 'plainCategory';
-    const DarwinNotificationDetails iosNotificationDetails =
-        DarwinNotificationDetails(
-      presentAlert: true,
-      categoryIdentifier: darwinNotificationCategoryPlain,
-    );
+    print("_showNotification Start 1");
 
     const NotificationDetails notificationDetails = NotificationDetails(
-        android: androidNotificationDetails, iOS: iosNotificationDetails);
+        android: androidNotificationDetails);
 
+    print("_showNotification Start 2");
     await flutterLocalNotificationsPlugin.show(
       0,
       'アラーム',
@@ -157,6 +126,7 @@ class AlarmManager {
       notificationDetails,
       payload: 'stop_action:',
     );
+    print("_showNotification Start 3");
   }
 
   Future<void> _handleNotificationAction(NotificationResponse? payload) async {

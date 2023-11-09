@@ -1,5 +1,6 @@
 package com.example.alarmclock.alarm_clock
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.ContentValues.TAG
@@ -12,6 +13,8 @@ import androidx.annotation.NonNull
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.util.*
+import android.provider.Settings
+import androidx.core.content.ContextCompat
 
 class MainActivity : FlutterActivity() {
 
@@ -19,8 +22,7 @@ class MainActivity : FlutterActivity() {
         lateinit var flutterEngine: FlutterEngine
     }
 
-    private var alarmPendingIntent: PendingIntent? = null
-    private val CHANNEL = "com.example.myapp"
+    private val CHANNEL = "alarm call method"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -32,14 +34,14 @@ class MainActivity : FlutterActivity() {
             if (call.method == "lets") {
                 val list = call.arguments as List<String>
                 println("MainActiivtyのリスト${list}")
-                Log.d("ああああ", "レッツ")
+                Log.d(TAG, "レッツ")
                 setAlarm(list)
             }
         }
     }
 
+    @SuppressLint("ScheduleExactAlarm")
     fun setAlarm(alarmTimes: List<String>) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
         for (time in alarmTimes) {
             val parts = time.split(":")
@@ -53,20 +55,42 @@ class MainActivity : FlutterActivity() {
             }
             val requestCode = hour * 60 + minute
             val intent = Intent(context, AlarmReceiver::class.java)
-            val alarmPendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE)
+            val alarmPendingIntent = PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
 
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                val alarmClockInfo = AlarmManager.AlarmClockInfo(calendar.timeInMillis, null)
-                alarmManager.setAlarmClock(alarmClockInfo, alarmPendingIntent)
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    alarmPendingIntent
-                )
-            } else {
-                alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, alarmPendingIntent)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val alarmManager =
+                    ContextCompat.getSystemService(context, AlarmManager::class.java)
+                if (alarmManager?.canScheduleExactAlarms() == false) {
+                    Intent().also { intent ->
+                        intent.action = Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
+                        context.startActivity(intent)
+                    }
+                } else {
+                    // ここにアラーム設定のコードを書きます
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        val alarmClockInfo =
+                            AlarmManager.AlarmClockInfo(calendar.timeInMillis, null)
+                        alarmManager?.setAlarmClock(alarmClockInfo, alarmPendingIntent)
+                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        alarmManager?.setExact(
+                            AlarmManager.RTC_WAKEUP,
+                            calendar.timeInMillis,
+                            alarmPendingIntent
+                        )
+                    } else {
+                        alarmManager?.set(
+                            AlarmManager.RTC_WAKEUP,
+                            calendar.timeInMillis,
+                            alarmPendingIntent
+                        )
+                    }
+                }
             }
         }
     }

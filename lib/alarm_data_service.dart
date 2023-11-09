@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 class AlarmDataService {
   late SharedPreferences prefs;
   // MethodChannelの初期化
-  static const platform = const MethodChannel('com.example.myapp');
+  static const platform = const MethodChannel('alarm call method');
 
   Future<void> initSharedPreferences() async {
     prefs = await SharedPreferences.getInstance();
@@ -19,18 +19,18 @@ class AlarmDataService {
     prefs = await SharedPreferences.getInstance();
 
 
-    if (alarms != null && alarms.isNotEmpty) {
+    if (alarms.isNotEmpty) {
       sortAlarms();
       callback();
 
-      print("alarms != null $alarms");
+      print("alarms isNotEmpty $alarms");
     } else if (alarms.isEmpty) {
       //呼び出される時はアプリを開いた時のみ
-      print("alarms null");
-      final alarmCards = await getAlarmCardsFromSharedPreferences();
-      sortAlarms();
+      print("alarms isEmpty");
+      final getShared = await getAlarmCardsFromSharedPreferences();
+      // sortAlarms();
       alarms.clear();
-      alarms.addAll(alarmCards);
+      alarms.addAll(getShared);
       print(alarms);
       callback();
     }
@@ -40,7 +40,7 @@ class AlarmDataService {
         .map((alarmCard) => '${alarmCard.alarmTime.hour}:${alarmCard.alarmTime.minute}')
         .toList();
 
-    print("どうですかねー${alarmsSet}");
+    print("セットされている時間をMainActivityに渡す${alarmsSet}");
     final result = await platform.invokeMethod('lets', alarmsSet);
     if (result != null) {
       result;
